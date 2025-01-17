@@ -1,0 +1,35 @@
+name: nodes1
+description: A simple Flutter project
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  csv: ^5.0.0 # Check for the latest version on pub.dev
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/game_map.csv
+    - assets/images/default.webp
+    - assets/images/A_dynamic_battle_scene.webp
+    - assets/images/Cossacks_surveying_village.webp
+    - assets/images/Cossack_scouts_with_map.webp
+    - assets/images/Makeshift_military_camp.webp
+    - assets/images/Cossacks_setting_barricades.webp
+    - assets/images/Cossacks_overlooking_town.webp
+    - assets/images/Cossack_negotiation_scene.webp
+    - assets/images/Cossack_officers_planning_battle.webp
+    - assets/images/Weary_Cossacks_defensive_posture.webp
+    - assets/images/Aftermath_of_battle_ruins.webp
+    - assets/images/Victorious_Cossacks_cheering.webp
