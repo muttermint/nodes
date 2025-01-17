@@ -1,4 +1,4 @@
-import 'package:flutter/services.dart' show rootBundle;
+import 'csv_parser.dart';
 
 class GameNode {
   final String nodeId;
@@ -21,6 +21,38 @@ class GameNode {
     required this.loseReason,
   });
 
+  factory GameNode.fromCsvRow(List<String> row) {
+    bool isEndNode = row[12] == '1' || row[13] == '1';
+
+    List<String> options = [];
+    List<String> optionText = [];
+    List<double> resources = [];
+
+    if (!isEndNode) {
+      options = [row[1], row[2], row[3]]
+          .where((option) => option.isNotEmpty && option != 'None')
+          .toList();
+
+      optionText = [row[4], row[5], row[6]]
+          .where((text) => text.isNotEmpty && text != 'None')
+          .toList();
+
+      resources = List.generate(options.length,
+          (i) => double.tryParse(row[7 + i].replaceAll(',', '')) ?? 0.0);
+    }
+
+    return GameNode(
+      nodeId: row[0],
+      options: options,
+      optionText: optionText,
+      resources: resources,
+      description: row[10],
+      win: row[12],
+      lose: row[13],
+      loseReason: row[14],
+    );
+  }
+
   @override
   String toString() {
     return 'GameNode{nodeId: $nodeId, options: $options, optionText: $optionText}';
@@ -30,87 +62,40 @@ class GameNode {
 class GameData {
   static final Map<String, GameNode> _nodes = {};
   static bool _isInitialized = false;
+  static const String _csvFilePath = 'assets/game_map.csv';
 
   static Future<void> initialize() async {
     if (_isInitialized) return;
 
     try {
-      print('Loading CSV file...');
-      final String csvData = await rootBundle.loadString('assets/game_map.csv');
-      print('CSV file loaded, length: ${csvData.length}');
+      final parser = CsvParser(_csvFilePath);
+      final List<List<String>> rows = await parser.loadCsv();
 
-      final List<String> lines = csvData.split('\n');
-      print('Number of lines: ${lines.length}');
-
-      // Skip header line
-      for (int i = 1; i < lines.length; i++) {
-        final line = lines[i].trim();
-        if (line.isEmpty) continue;
+      // Skip header row
+      for (int i = 1; i < rows.length; i++) {
+        final row = rows[i];
+        if (row.isEmpty) continue;
 
         try {
-          final parts = _parseCsvLine(line);
-          if (parts.length < 14) {
-            print('Skipping line $i: insufficient columns (${parts.length})');
+          if (row.length < 15) {
+            print(
+                'Warning: Invalid row at line $i (insufficient columns): ${row.length} columns');
             continue;
           }
 
-          final nodeId = parts[0];
-          final options = [parts[1], parts[2], parts[3]]
-              .where((option) => option != 'None')
-              .toList();
-          final optionText = [parts[4], parts[5], parts[6]]
-              .where((text) => text != 'No action specified')
-              .toList();
-          final resources = [
-            double.tryParse(parts[7]) ?? 0.0,
-            double.tryParse(parts[8]) ?? 0.0,
-            double.tryParse(parts[9]) ?? 0.0,
-          ].sublist(0, options.length);
-
-          _nodes[nodeId] = GameNode(
-            nodeId: nodeId,
-            options: options,
-            optionText: optionText,
-            resources: resources,
-            description: parts[10],
-            win: parts[11],
-            lose: parts[12],
-            loseReason: parts[13],
-          );
-          print('Added node: $nodeId');
+          final node = GameNode.fromCsvRow(row);
+          _nodes[node.nodeId] = node;
         } catch (e) {
           print('Error processing line $i: $e');
         }
       }
 
-      print('Nodes loaded: ${_nodes.length}');
-      print('Available nodes: ${_nodes.keys.join(', ')}');
-
       _isInitialized = true;
-    } catch (e, stackTrace) {
+      print('Game data initialized with ${_nodes.length} nodes');
+    } catch (e) {
       print('Error initializing game data: $e');
-      print('Stack trace: $stackTrace');
       rethrow;
     }
-  }
-
-  static List<String> _parseCsvLine(String line) {
-    List<String> result = [];
-    bool inQuotes = false;
-    StringBuffer currentField = StringBuffer();
-
-    for (int i = 0; i < line.length; i++) {
-      if (line[i] == '"') {
-        inQuotes = !inQuotes;
-      } else if (line[i] == ',' && !inQuotes) {
-        result.add(currentField.toString().trim());
-        currentField.clear();
-      } else {
-        currentField.write(line[i]);
-      }
-    }
-    result.add(currentField.toString().trim());
-    return result;
   }
 
   static GameNode? getNode(String nodeId) {

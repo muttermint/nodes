@@ -1,4 +1,5 @@
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'csv_parser.dart';
 
 class GameMapNode {
   final String nodeId;
@@ -25,15 +26,12 @@ class GameMapNode {
 
   factory GameMapNode.fromCsvRow(List<String> row) {
     bool isEndNode = row[12] == '1' || row[13] == '1';
-    print(
-        'Node ${row[0]} has lose condition: ${row[13]}'); // Log lose condition
+    print('Node ${row[0]} has lose condition: ${row[13]}');
 
-    // For end nodes, we ensure lists are empty
     List<String> nextNodes = [];
     List<String> actionTexts = [];
     List<double> resourceCosts = [];
 
-    // Only process actions for non-end nodes
     if (!isEndNode) {
       nextNodes = [row[1], row[2], row[3]]
           .where((node) => node.isNotEmpty && node != 'None')
@@ -86,6 +84,7 @@ class GameMap {
   final Map<String, GameMapNode> _nodes = {};
   bool _isInitialized = false;
   GameMapNode? _defaultLoseNode;
+  static const String _csvFilePath = 'assets/game_map.csv';
 
   bool get isInitialized => _isInitialized;
 
@@ -93,16 +92,15 @@ class GameMap {
     if (_isInitialized) return;
 
     try {
-      final String csvData = await rootBundle.loadString('assets/game_map.csv');
-      final List<String> lines = csvData.split('\n');
+      final parser = CsvParser(_csvFilePath);
+      final List<List<String>> rows = await parser.loadCsv();
 
-      // Skip header line
-      for (int i = 1; i < lines.length; i++) {
-        final line = lines[i].trim();
-        if (line.isEmpty) continue;
+      // Skip header row
+      for (int i = 1; i < rows.length; i++) {
+        final row = rows[i];
+        if (row.isEmpty) continue;
 
         try {
-          final List<String> row = _parseCsvLine(line);
           if (row.length < 15) {
             print(
                 'Warning: Invalid row at line $i (insufficient columns): ${row.length} columns');
@@ -112,14 +110,11 @@ class GameMap {
           final node = GameMapNode.fromCsvRow(row);
           _nodes[node.nodeId] = node;
 
-          // Log if it's a lose node
           if (node.isLoseNode) {
             print('Found lose node: ${node.nodeId}');
-          }
-
-          // Store the first lose node we find as the default
-          if (node.isLoseNode && _defaultLoseNode == null) {
-            _defaultLoseNode = node;
+            if (_defaultLoseNode == null) {
+              _defaultLoseNode = node;
+            }
           }
         } catch (e) {
           print('Error processing line $i: $e');
@@ -143,25 +138,6 @@ class GameMap {
     }
   }
 
-  List<String> _parseCsvLine(String line) {
-    List<String> result = [];
-    bool inQuotes = false;
-    StringBuffer currentField = StringBuffer();
-
-    for (int i = 0; i < line.length; i++) {
-      if (line[i] == '"') {
-        inQuotes = !inQuotes;
-      } else if (line[i] == ',' && !inQuotes) {
-        result.add(currentField.toString().trim());
-        currentField.clear();
-      } else {
-        currentField.write(line[i]);
-      }
-    }
-    result.add(currentField.toString().trim());
-    return result;
-  }
-
   GameMapNode? getNode(String nodeId) {
     if (!_isInitialized) {
       throw GameMapError('GameMap not initialized. Call initialize() first.');
@@ -181,7 +157,7 @@ class GameMap {
       throw GameMapError('GameMap not initialized. Call initialize() first.');
     }
 
-    final startNode = _nodes['1']; // Start with node ID '1'
+    final startNode = _nodes['1'];
     if (startNode == null) {
       throw GameMapError('Start node (ID: 1) not found in game map');
     }
