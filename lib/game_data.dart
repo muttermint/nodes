@@ -1,9 +1,34 @@
-import 'game_map.dart'; // Ensure this import is present
-import 'package:flutter/services.dart'; // Import to use rootBundle
+import 'package:flutter/services.dart' show rootBundle;
+
+class GameNode {
+  final String nodeId;
+  final List<String> options;
+  final List<String> optionText;
+  final List<double> resources;
+  final String description;
+  final String win;
+  final String lose;
+  final String loseReason;
+
+  GameNode({
+    required this.nodeId,
+    required this.options,
+    required this.optionText,
+    required this.resources,
+    required this.description,
+    required this.win,
+    required this.lose,
+    required this.loseReason,
+  });
+
+  @override
+  String toString() {
+    return 'GameNode{nodeId: $nodeId, options: $options, optionText: $optionText}';
+  }
+}
 
 class GameData {
-  static final List<GameMapNode> nodes = []; // List of nodes
-
+  static final Map<String, GameNode> _nodes = {};
   static bool _isInitialized = false;
 
   static Future<void> initialize() async {
@@ -17,14 +42,14 @@ class GameData {
       final List<String> lines = csvData.split('\n');
       print('Number of lines: ${lines.length}');
 
-      // Skip header line and parse each row
+      // Skip header line
       for (int i = 1; i < lines.length; i++) {
         final line = lines[i].trim();
         if (line.isEmpty) continue;
 
         try {
           final parts = _parseCsvLine(line);
-          if (parts.length < 15) {
+          if (parts.length < 14) {
             print('Skipping line $i: insufficient columns (${parts.length})');
             continue;
           }
@@ -42,33 +67,24 @@ class GameData {
             double.tryParse(parts[9]) ?? 0.0,
           ].sublist(0, options.length);
 
-          nodes.add(GameMapNode(
+          _nodes[nodeId] = GameNode(
             nodeId: nodeId,
-            nextNodes: options,
-            actionTexts: optionText,
-            resourceCosts: resources,
+            options: options,
+            optionText: optionText,
+            resources: resources,
             description: parts[10],
-            image: parts[11].isNotEmpty
-                ? parts[11]
-                : 'default_image.webp', // Default to 'default_image.webp' if empty
-            winCondition: parts[11],
-            loseCondition: parts[12],
+            win: parts[11],
+            lose: parts[12],
             loseReason: parts[13],
-          ));
-
+          );
           print('Added node: $nodeId');
         } catch (e) {
           print('Error processing line $i: $e');
         }
       }
 
-      print('Nodes loaded: ${nodes.length}');
-      nodes.forEach((node) {
-        print('Loaded node ID: ${node.nodeId}');
-      });
-
-      print('Nodes loaded: ${nodes.length}');
-      print('Available nodes: ${nodes.map((e) => e.nodeId).join(', ')}');
+      print('Nodes loaded: ${_nodes.length}');
+      print('Available nodes: ${_nodes.keys.join(', ')}');
 
       _isInitialized = true;
     } catch (e, stackTrace) {
@@ -97,8 +113,16 @@ class GameData {
     return result;
   }
 
-  static GameMapNode? getNode(String nodeId) {
-    // Ensure nodeId is trimmed for comparison
-    return nodes.firstWhere((node) => node.nodeId.trim() == nodeId.trim());
+  static GameNode? getNode(String nodeId) {
+    if (!_isInitialized) {
+      print('Warning: Attempting to get node before initialization');
+      return null;
+    }
+    final node = _nodes[nodeId];
+    if (node == null) {
+      print('Node not found: $nodeId');
+      print('Available nodes: ${_nodes.keys.join(', ')}');
+    }
+    return node;
   }
 }
