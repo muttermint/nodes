@@ -409,3 +409,11 @@ pubspec.lock
 .dart_tool/chrome-device/Default/discounts_db/LOG.old
 .dart_tool/chrome-device/Default/optimization_guide_hint_cache_store/LOG.old
 .dart_tool/chrome-device/Default/parcel_tracking_db/LOG.old
+.dart_tool/chrome-device/Default/Sessions/Session_13381633825281172
+.dart_tool/chrome-device/Default/Sessions/Tabs_13381633825463604
+build/flutter_assets/assets/sounds/attack.mp3
+build/flutter_assets/assets/sounds/lose.mp3
+build/flutter_assets/assets/sounds/warning.mp3
+build/flutter_assets/assets/sounds/win.mp3
+.flutter-plugins
+.flutter-plugins-dependencies

@@ -11,6 +11,7 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.2
   meta: ^1.9.1
+  just_audio: ^0.9.34
 
 dev_dependencies:
   flutter_test:
@@ -33,3 +34,7 @@ flutter:
     - assets/images/Weary_Cossacks_defensive_posture.webp
     - assets/images/Aftermath_of_battle_ruins.webp
     - assets/images/Victorious_Cossacks_cheering.webp
+    - assets/sounds/attack.mp3
+    - assets/sounds/warning.mp3
+    - assets/sounds/win.mp3
+    - assets/sounds/lose.mp3

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'game_map.dart';
 
 void main() {
@@ -33,11 +34,29 @@ class _GamePageState extends State<GamePage> {
   double resources = 100.0;
   String? error;
   bool isLoading = true;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
     _initializeGame();
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _playNodeSound() async {
+    if (currentNode == null || !currentNode!.hasSound) return;
+
+    try {
+      await _audioPlayer.setAsset('assets/sounds/${currentNode!.sound}');
+      await _audioPlayer.play();
+    } catch (e) {
+      print('Error playing sound: $e');
+    }
   }
 
   Future<void> _initializeGame() async {
@@ -54,6 +73,9 @@ class _GamePageState extends State<GamePage> {
         currentNode = startNode;
         isLoading = false;
       });
+
+      // Play sound for initial node if available
+      _playNodeSound();
     } catch (e) {
       setState(() {
         error = 'Error loading game: $e';
@@ -82,6 +104,7 @@ class _GamePageState extends State<GamePage> {
         error = 'Invalid choice. Game over.';
         currentNode = GameMap().getDefaultLoseNode();
       });
+      _playNodeSound();
       return;
     }
 
@@ -93,6 +116,7 @@ class _GamePageState extends State<GamePage> {
       // Check if we've run out of resources
       if (resources <= 0) {
         currentNode = GameMap().getDefaultLoseNode();
+        _playNodeSound();
         return;
       }
 
@@ -104,9 +128,11 @@ class _GamePageState extends State<GamePage> {
       if (nextNode == null) {
         error = 'Game error: Invalid transition';
         currentNode = GameMap().getDefaultLoseNode();
+        _playNodeSound();
         return;
       }
       currentNode = nextNode;
+      _playNodeSound();
     });
   }
 
@@ -116,6 +142,7 @@ class _GamePageState extends State<GamePage> {
       currentNode = GameMap().getStartNode();
       error = null;
     });
+    _playNodeSound();
   }
 
   Widget _buildImage(String imagePath) {

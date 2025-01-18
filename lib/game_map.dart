@@ -1,9 +1,10 @@
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:meta/meta.dart';
 import 'csv_parser.dart';
 import 'game_node_base.dart';
 
 class GameMapNode extends GameNodeBase {
   final String image;
+  final String sound;
   final String winCondition;
   final String loseCondition;
   final String loseReason;
@@ -16,6 +17,7 @@ class GameMapNode extends GameNodeBase {
     required super.resources,
     required super.isEndNode,
     required this.image,
+    required this.sound,
     required this.winCondition,
     required this.loseCondition,
     required this.loseReason,
@@ -32,6 +34,7 @@ class GameMapNode extends GameNodeBase {
       resources: parsed.resources,
       isEndNode: parsed.isEndNode,
       image: parsed.image,
+      sound: parsed.sound,
       winCondition: parsed.winCondition,
       loseCondition: parsed.loseCondition,
       loseReason: parsed.loseReason,
@@ -40,6 +43,7 @@ class GameMapNode extends GameNodeBase {
 
   bool get isWinNode => winCondition == '1';
   bool get isLoseNode => loseCondition == '1';
+  bool get hasSound => sound.isNotEmpty;
 
   @override
   String toString() {

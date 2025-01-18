@@ -4,7 +4,7 @@ class GameNodeParseError extends Error {
   final String message;
   final int rowIndex;
   GameNodeParseError(this.message, this.rowIndex);
-  
+
   @override
   String toString() => 'GameNodeParseError: $message (Row: $rowIndex)';
 }
@@ -27,12 +27,21 @@ abstract class GameNodeBase {
   }) {
     // Validate that resources match the number of actions
     if (!isEndNode && resources.length != nextNodes.length) {
-      throw ArgumentError('Resources count must match the number of next nodes');
+      throw ArgumentError(
+          'Resources count must match the number of next nodes');
     }
   }
 
   /// Gets the resource costs for each action
   List<double> get resourceCosts => resources;
+
+  /// Safely gets a value from a row with a default
+  static String _safeGet(List<String> row, int index, String defaultValue) {
+    if (index >= 0 && index < row.length) {
+      return row[index].trim();
+    }
+    return defaultValue;
+  }
 
   /// Parses common fields from a CSV row
   @protected
@@ -44,13 +53,14 @@ abstract class GameNodeBase {
     List<double> resources,
     bool isEndNode,
     String image,
+    String sound,
     String winCondition,
     String loseCondition,
     String loseReason,
   }) parseRow(List<String> row, [int rowIndex = 0]) {
-    if (row.length < 15) {
+    if (row.length < 11) {
       throw GameNodeParseError(
-        'Row must have at least 15 columns',
+        'Row must have at least 11 columns',
         rowIndex,
       );
     }
@@ -65,10 +75,12 @@ abstract class GameNodeBase {
       throw GameNodeParseError('Description cannot be empty', rowIndex);
     }
 
-    final image = row[11].trim();
-    final winCondition = row[12].trim();
-    final loseCondition = row[13].trim();
-    final loseReason = row[14].trim();
+    final image = _safeGet(row, 11, '');
+    final sound = _safeGet(row, 12, '');
+    final winCondition = _safeGet(row, 13, '0');
+    final loseCondition = _safeGet(row, 14, '0');
+    final loseReason = _safeGet(row, 15, '');
+
     final isEndNode = winCondition == '1' || loseCondition == '1';
 
     List<String> nextNodes = [];
@@ -77,15 +89,21 @@ abstract class GameNodeBase {
 
     if (!isEndNode) {
       // Parse next nodes
-      nextNodes = [row[1], row[2], row[3]]
+      nextNodes = [
+        _safeGet(row, 1, ''),
+        _safeGet(row, 2, ''),
+        _safeGet(row, 3, '')
+      ]
           .where((node) => node.isNotEmpty && node != 'None' && node != '0')
           .toList();
-          
+
       // Parse action texts - must match number of next nodes
-      actionTexts = [row[4], row[5], row[6]]
-          .where((text) => text.isNotEmpty && text != 'None')
-          .toList();
-          
+      actionTexts = [
+        _safeGet(row, 4, ''),
+        _safeGet(row, 5, ''),
+        _safeGet(row, 6, '')
+      ].where((text) => text.isNotEmpty && text != 'None').toList();
+
       if (actionTexts.length != nextNodes.length) {
         throw GameNodeParseError(
           'Number of action texts (${actionTexts.length}) must match number of next nodes (${nextNodes.length})',
@@ -98,9 +116,9 @@ abstract class GameNodeBase {
         resources = List.generate(
           nextNodes.length,
           (i) {
-            final value = row[7 + i].replaceAll(',', '').trim();
+            final value = _safeGet(row, 7 + i, '0').replaceAll(',', '');
             if (value.isEmpty) return 0.0;
-            
+
             final resource = double.tryParse(value);
             if (resource == null) {
               throw GameNodeParseError(
@@ -125,6 +143,7 @@ abstract class GameNodeBase {
       resources: resources,
       isEndNode: isEndNode,
       image: image,
+      sound: sound,
       winCondition: winCondition,
       loseCondition: loseCondition,
       loseReason: loseReason,
