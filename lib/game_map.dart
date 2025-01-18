@@ -1,23 +1,20 @@
 import 'package:flutter/services.dart' show rootBundle;
 import 'csv_parser.dart';
+import 'game_node_base.dart';
 
-class GameMapNode {
-  final String nodeId;
-  final List<String> nextNodes;
-  final List<String> actionTexts;
-  final List<double> resourceCosts;
-  final String description;
+class GameMapNode extends GameNodeBase {
   final String image;
   final String winCondition;
   final String loseCondition;
   final String loseReason;
 
   GameMapNode({
-    required this.nodeId,
-    required this.nextNodes,
-    required this.actionTexts,
-    required this.resourceCosts,
-    required this.description,
+    required super.nodeId,
+    required super.description,
+    required super.nextNodes,
+    required super.actionTexts,
+    required super.resources,
+    required super.isEndNode,
     required this.image,
     required this.winCondition,
     required this.loseCondition,
@@ -25,40 +22,22 @@ class GameMapNode {
   });
 
   factory GameMapNode.fromCsvRow(List<String> row) {
-    bool isEndNode = row[12] == '1' || row[13] == '1';
-    print('Node ${row[0]} has lose condition: ${row[13]}');
-
-    List<String> nextNodes = [];
-    List<String> actionTexts = [];
-    List<double> resourceCosts = [];
-
-    if (!isEndNode) {
-      nextNodes = [row[1], row[2], row[3]]
-          .where((node) => node.isNotEmpty && node != 'None')
-          .toList();
-
-      actionTexts = [row[4], row[5], row[6]]
-          .where((text) => text.isNotEmpty && text != 'None')
-          .toList();
-
-      resourceCosts = List.generate(nextNodes.length,
-          (i) => double.tryParse(row[7 + i].replaceAll(',', '')) ?? 0.0);
-    }
+    final parsed = GameNodeBase.parseRow(row);
 
     return GameMapNode(
-      nodeId: row[0],
-      nextNodes: nextNodes,
-      actionTexts: actionTexts,
-      resourceCosts: resourceCosts,
-      description: row[10],
-      image: row[11].trim(),
-      winCondition: row[12].trim(),
-      loseCondition: row[13].trim(),
-      loseReason: row[14].trim(),
+      nodeId: parsed.nodeId,
+      description: parsed.description,
+      nextNodes: parsed.nextNodes,
+      actionTexts: parsed.actionTexts,
+      resources: parsed.resources,
+      isEndNode: parsed.isEndNode,
+      image: parsed.image,
+      winCondition: parsed.winCondition,
+      loseCondition: parsed.loseCondition,
+      loseReason: parsed.loseReason,
     );
   }
 
-  bool get isEndNode => winCondition == '1' || loseCondition == '1';
   bool get isWinNode => winCondition == '1';
   bool get isLoseNode => loseCondition == '1';
 

@@ -390,3 +390,22 @@ build/flutter_assets/shaders/ink_sparkle.frag
 .dart_tool/extension_discovery/vs_code.json
 flutter_01.log
 pubspec.lock
+.dart_tool/chrome-device/Default/LOG.old
+.dart_tool/chrome-device/Default/AutofillStrikeDatabase/LOG.old
+.dart_tool/chrome-device/Default/BudgetDatabase/LOG.old
+.dart_tool/chrome-device/Default/ClientCertificates/LOG.old
+.dart_tool/chrome-device/Default/Download Service/EntryDB/LOG.old
+.dart_tool/chrome-device/Default/Feature Engagement Tracker/AvailabilityDB/LOG.old
+.dart_tool/chrome-device/Default/Feature Engagement Tracker/EventDB/LOG.old
+.dart_tool/chrome-device/Default/PersistentOriginTrials/LOG.old
+.dart_tool/chrome-device/Default/Segmentation Platform/SegmentInfoDB/LOG.old
+.dart_tool/chrome-device/Default/Segmentation Platform/SignalDB/LOG.old
+.dart_tool/chrome-device/Default/Segmentation Platform/SignalStorageConfigDB/LOG.old
+.dart_tool/chrome-device/Default/Service Worker/ScriptCache/4cb013792b196a35_0
+.dart_tool/chrome-device/Default/Sessions/Session_13381630422437980
+.dart_tool/chrome-device/Default/Sessions/Session_13381630634766696
+.dart_tool/chrome-device/Default/Sessions/Tabs_13381630422622117
+.dart_tool/chrome-device/Default/commerce_subscription_db/LOG.old
+.dart_tool/chrome-device/Default/discounts_db/LOG.old
+.dart_tool/chrome-device/Default/optimization_guide_hint_cache_store/LOG.old
+.dart_tool/chrome-device/Default/parcel_tracking_db/LOG.old

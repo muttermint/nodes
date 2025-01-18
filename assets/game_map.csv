@@ -1,6 +1,6 @@
 nodeID,option1,option2,option3,text1,text2,text3,resources1,resources2,resources3,description,image,win,lose,loseReason,loseNode
-1,2,3,4,Scout the area,Gather reinforcements,Establish a forward camp,-10,-20,-15,You are leading a group of Cossacks. What will you do first?,A_dynamic_battle_scene.webp,,,,
-2,5,6,7,Infiltrate the target,Attack the weak point,Negotiate with locals,-5,-30,-10,You have gathered intelligence. Choose your next action wisely!,Cossacks_surveying_village.webp,,,,
+1,2,3,4,Scout the area,Gather reinforcements,Establish a forward camp,-10,-20,-15,You are leading a group of Cossacks. What will you do first?,A_dynamic_battle_scene.webp,,,
+2,5,6,7,Infiltrate the target,Attack the weak point,Negotiate with locals,-5,-30,-10,You have gathered intelligence. Choose your next action wisely!,Cossacks_surveying_village.webp,,,
 3,8,9,10,Sabotage supplies,Bribe officials,Spread misinformation,-15,-25,-10,You have infiltrated the enemy. What will you sabotage next?,Cossack_scouts_with_map.webp,,,,
 4,11,12,13,Regroup your forces,Launch a surprise attack,Retreat to a secure location,-20,-10,-15,You have been detected! It's time to reevaluate your strategy.,Makeshift_military_camp.webp,,,,
 5,14,15,16,Train your cavalry,Recruit local allies,Fortify defenses,-25,-20,-15,Strengthen your position. What will be your next step?,Cossacks_setting_barricades.webp,,,,
@@ -20,7 +20,7 @@ nodeID,option1,option2,option3,text1,text2,text3,resources1,resources2,resources
 19,23,24,25,Call for reinforcements,Scout for enemy movements,Regroup,-10,-15,-20,Your options are dwindling. Choose wisely.,Weary_Cossacks_defensive_posture.webp,,,,
 20,,,,,,,0,0,0,End Game: You have lost. Reflect on your choices.,Aftermath_of_battle_ruins.webp,0,1,,1
 21,,,,,,,0,0,0,End Game: Congratulations! You have succeeded.,Victorious_Cossacks_cheering.webp,1,0,,0
-22,10,21,20,Train Advanced Units,Focus on Cavalry,Invest in Artillery,10,10,-10,Choose your final path wisely.,Cossacks_overlooking_town.webp,,,,
+22,10,21,20,Train Advanced Units,Focus on Cavalry,Invest in Artillery,+10,+10,-10,Choose your final path wisely.,Cossacks_overlooking_town.webp,,,,
 23,10,21,20,Pursue Diplomacy,Employ Deception,Engage Aggressively,+10,-10,-20,Choose your final path wisely.,Cossack_scouts_with_map.webp,,,,
 24,10,21,20,Strengthen Defenses,Gather Intelligence,Scout Enemy Positions,+10,-10,-20,Choose your final path wisely.,Cossack_officers_planning_battle.webp,,,,
 25,10,21,20,Rally Allies,Train Troops,Resupply,+10,-10,-20,Choose your final path wisely.,Cossacks_setting_barricades.webp,,,,
