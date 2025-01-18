@@ -184,16 +184,25 @@ class _GamePageState extends State<GamePage> {
   Widget build(BuildContext context) {
     if (error != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Game Over')),
+        appBar: AppBar(
+          title: Row(
+            children: const [
+              Icon(Icons.warning_amber),
+              SizedBox(width: 8),
+              Text('Game Over'),
+            ],
+          ),
+        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(error!, style: const TextStyle(color: Colors.red)),
               const SizedBox(height: 20),
-              ElevatedButton(
+              ElevatedButton.icon(
+                icon: const Icon(Icons.refresh),
+                label: const Text('Restart Game'),
                 onPressed: restartGame,
-                child: const Text('Restart Game'),
               ),
             ],
           ),
@@ -212,14 +221,26 @@ class _GamePageState extends State<GamePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cossack Adventure'),
+        title: Row(
+          children: const [
+            Icon(Icons.castle),
+            SizedBox(width: 8),
+            Text('Cossack Adventure'),
+          ],
+        ),
         actions: [
           Center(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text(
-                'Resources: ${resources.toStringAsFixed(1)}',
-                style: const TextStyle(fontSize: 16),
+              child: Row(
+                children: [
+                  const Icon(Icons.diamond),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Resources: ${resources.toStringAsFixed(1)}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ],
               ),
             ),
           ),
@@ -249,13 +270,19 @@ class _GamePageState extends State<GamePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Situation',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2C3E50),
-                          ),
+                        Row(
+                          children: const [
+                            Icon(Icons.map, size: 28),
+                            SizedBox(width: 8),
+                            Text(
+                              'Situation',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2C3E50),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 12),
                         Row(
@@ -279,15 +306,29 @@ class _GamePageState extends State<GamePage> {
                           const SizedBox(height: 16),
                           const Divider(),
                           const SizedBox(height: 16),
-                          Text(
-                            currentNode!.isWinNode ? 'Victory!' : 'Defeat',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: currentNode!.isWinNode
-                                  ? const Color(0xFF27AE60)
-                                  : const Color(0xFFE74C3C),
-                            ),
+                          Row(
+                            children: [
+                              Icon(
+                                currentNode!.isWinNode
+                                    ? Icons.emoji_events
+                                    : Icons.warning,
+                                color: currentNode!.isWinNode
+                                    ? const Color(0xFF27AE60)
+                                    : const Color(0xFFE74C3C),
+                                size: 28,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                currentNode!.isWinNode ? 'Victory!' : 'Defeat',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: currentNode!.isWinNode
+                                      ? const Color(0xFF27AE60)
+                                      : const Color(0xFFE74C3C),
+                                ),
+                              ),
+                            ],
                           ),
                           if (currentNode!.loseReason.isNotEmpty &&
                               currentNode!.loseReason != 'Not applicable') ...[
@@ -302,7 +343,9 @@ class _GamePageState extends State<GamePage> {
                             ),
                           ],
                           const SizedBox(height: 20),
-                          ElevatedButton(
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Play Again'),
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 40,
@@ -314,13 +357,6 @@ class _GamePageState extends State<GamePage> {
                               ),
                             ),
                             onPressed: restartGame,
-                            child: const Text(
-                              'Play Again',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
                           ),
                         ],
                       ],
@@ -330,13 +366,19 @@ class _GamePageState extends State<GamePage> {
                 const SizedBox(height: 24),
                 if (!currentNode!.isEndNode &&
                     currentNode!.actionTexts.isNotEmpty) ...[
-                  const Text(
-                    'Your Options:',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
-                    ),
+                  Row(
+                    children: const [
+                      Icon(Icons.list_alt, size: 24),
+                      SizedBox(width: 8),
+                      Text(
+                        'Your Options:',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2C3E50),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   ...List.generate(
@@ -344,6 +386,14 @@ class _GamePageState extends State<GamePage> {
                     (index) => Padding(
                       padding: const EdgeInsets.only(bottom: 12.0),
                       child: ElevatedButton(
+                        child: Text(
+                          '${currentNode!.actionTexts[index]} (${currentNode!.resourceCosts[index].toStringAsFixed(1)} resources)',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 20,
@@ -355,14 +405,6 @@ class _GamePageState extends State<GamePage> {
                           ),
                         ),
                         onPressed: () => makeChoice(index),
-                        child: Text(
-                          '${currentNode!.actionTexts[index]} (${currentNode!.resourceCosts[index].toStringAsFixed(1)} resources)',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
                       ),
                     ),
                   ),
