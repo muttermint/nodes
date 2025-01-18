@@ -4,7 +4,7 @@ class GameNodeParseError extends Error {
   final String message;
   final int rowIndex;
   GameNodeParseError(this.message, this.rowIndex);
-
+  
   @override
   String toString() => 'GameNodeParseError: $message (Row: $rowIndex)';
 }
@@ -27,8 +27,7 @@ abstract class GameNodeBase {
   }) {
     // Validate that resources match the number of actions
     if (!isEndNode && resources.length != nextNodes.length) {
-      throw ArgumentError(
-          'Resources count must match the number of next nodes');
+      throw ArgumentError('Resources count must match the number of next nodes');
     }
   }
 
@@ -80,7 +79,7 @@ abstract class GameNodeBase {
     final winCondition = _safeGet(row, 13, '0');
     final loseCondition = _safeGet(row, 14, '0');
     final loseReason = _safeGet(row, 15, '');
-
+    
     final isEndNode = winCondition == '1' || loseCondition == '1';
 
     List<String> nextNodes = [];
@@ -93,17 +92,17 @@ abstract class GameNodeBase {
         _safeGet(row, 1, ''),
         _safeGet(row, 2, ''),
         _safeGet(row, 3, '')
-      ]
-          .where((node) => node.isNotEmpty && node != 'None' && node != '0')
+      ].where((node) => node.isNotEmpty && node != 'None' && node != '0')
           .toList();
-
+          
       // Parse action texts - must match number of next nodes
       actionTexts = [
         _safeGet(row, 4, ''),
         _safeGet(row, 5, ''),
         _safeGet(row, 6, '')
-      ].where((text) => text.isNotEmpty && text != 'None').toList();
-
+      ].where((text) => text.isNotEmpty && text != 'None')
+          .toList();
+          
       if (actionTexts.length != nextNodes.length) {
         throw GameNodeParseError(
           'Number of action texts (${actionTexts.length}) must match number of next nodes (${nextNodes.length})',
@@ -118,7 +117,7 @@ abstract class GameNodeBase {
           (i) {
             final value = _safeGet(row, 7 + i, '0').replaceAll(',', '');
             if (value.isEmpty) return 0.0;
-
+            
             final resource = double.tryParse(value);
             if (resource == null) {
               throw GameNodeParseError(

@@ -101,9 +101,8 @@ class _GamePageState extends State<GamePage> {
     if (index < 0 || index >= currentNode!.nextNodes.length) {
       setState(() {
         error = 'Invalid choice. Game over.';
-        currentNode = GameMap().getDefaultLoseNode();
+        _transitionToLoseState('Invalid choice made');
       });
-      _playNodeSound();
       return;
     }
 
@@ -112,8 +111,7 @@ class _GamePageState extends State<GamePage> {
           .clamp(0.0, double.infinity);
 
       if (resources <= 0) {
-        currentNode = GameMap().getDefaultLoseNode();
-        _playNodeSound();
+        _transitionToLoseState('Out of resources');
         return;
       }
 
@@ -123,13 +121,31 @@ class _GamePageState extends State<GamePage> {
       final nextNode = GameMap().getNode(nextNodeId);
       if (nextNode == null) {
         error = 'Game error: Invalid transition';
-        currentNode = GameMap().getDefaultLoseNode();
-        _playNodeSound();
+        _transitionToLoseState('Invalid game state');
         return;
       }
+
       currentNode = nextNode;
-      _playNodeSound();
+      if (currentNode!.hasSound) {
+        _playNodeSound();
+      }
     });
+  }
+
+  void _transitionToLoseState(String reason) {
+    try {
+      final loseNode = GameMap().findLoseNode();
+      setState(() {
+        currentNode = loseNode;
+        if (currentNode?.hasSound == true) {
+          _playNodeSound();
+        }
+      });
+    } catch (e) {
+      setState(() {
+        error = 'Critical game error: No lose state available';
+      });
+    }
   }
 
   void restartGame() {

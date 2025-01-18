@@ -1,6 +1,6 @@
 import 'package:meta/meta.dart';
-import 'csv_parser.dart';
 import 'game_node_base.dart';
+import 'services/firebase_service.dart';
 
 class GameMapNode extends GameNodeBase {
   final String image;
@@ -23,21 +23,39 @@ class GameMapNode extends GameNodeBase {
     required this.loseReason,
   });
 
-  factory GameMapNode.fromCsvRow(List<String> row) {
-    final parsed = GameNodeBase.parseRow(row);
+  factory GameMapNode.fromFirebase(Map<String, dynamic> data) {
+    final List<String> nextNodes = [];
+    final List<String> actionTexts = [];
+    final List<double> resources = [];
+
+    // Parse next nodes, action texts, and resources
+    for (int i = 1; i <= 3; i++) {
+      final nextNode = data['option$i']?.toString() ?? '';
+      final actionText = data['text$i']?.toString() ?? '';
+      final resource =
+          double.tryParse(data['resources$i']?.toString() ?? '0') ?? 0.0;
+
+      if (nextNode.isNotEmpty && nextNode != '0') {
+        nextNodes.add(nextNode);
+        actionTexts.add(actionText);
+        resources.add(resource);
+      }
+    }
+
+    final isEndNode = data['win'] == '1' || data['lose'] == '1';
 
     return GameMapNode(
-      nodeId: parsed.nodeId,
-      description: parsed.description,
-      nextNodes: parsed.nextNodes,
-      actionTexts: parsed.actionTexts,
-      resources: parsed.resources,
-      isEndNode: parsed.isEndNode,
-      image: parsed.image,
-      sound: parsed.sound,
-      winCondition: parsed.winCondition,
-      loseCondition: parsed.loseCondition,
-      loseReason: parsed.loseReason,
+      nodeId: data['nodeID']?.toString() ?? '',
+      description: data['description']?.toString() ?? '',
+      nextNodes: nextNodes,
+      actionTexts: actionTexts,
+      resources: resources,
+      isEndNode: isEndNode,
+      image: data['image']?.toString() ?? '',
+      sound: data['sound']?.toString() ?? '',
+      winCondition: data['win']?.toString() ?? '0',
+      loseCondition: data['lose']?.toString() ?? '0',
+      loseReason: data['loseReason']?.toString() ?? '',
     );
   }
 
@@ -66,8 +84,6 @@ class GameMap {
 
   final Map<String, GameMapNode> _nodes = {};
   bool _isInitialized = false;
-  GameMapNode? _defaultLoseNode;
-  static const String _csvFilePath = 'assets/game_map.csv';
 
   bool get isInitialized => _isInitialized;
 
@@ -75,41 +91,25 @@ class GameMap {
     if (_isInitialized) return;
 
     try {
-      final parser = CsvParser(_csvFilePath);
-      final List<List<String>> rows = await parser.loadCsv();
+      // Initialize Firebase service
+      final firebaseService = FirebaseService();
+      await firebaseService.initialize();
 
-      // Skip header row
-      for (int i = 1; i < rows.length; i++) {
-        final row = rows[i];
-        if (row.isEmpty) continue;
+      // Fetch node data from Firebase
+      final nodeData = await firebaseService.fetchNodeMapData();
 
+      // Process each node
+      for (final data in nodeData) {
         try {
-          if (row.length < 15) {
-            print(
-                'Warning: Invalid row at line $i (insufficient columns): ${row.length} columns');
-            continue;
-          }
-
-          final node = GameMapNode.fromCsvRow(row);
+          final node = GameMapNode.fromFirebase(data);
           _nodes[node.nodeId] = node;
-
-          if (node.isLoseNode) {
-            print('Found lose node: ${node.nodeId}');
-            if (_defaultLoseNode == null) {
-              _defaultLoseNode = node;
-            }
-          }
         } catch (e) {
-          print('Error processing line $i: $e');
+          print('Error processing node data: $e');
         }
       }
 
       if (_nodes.isEmpty) {
         throw GameMapError('No valid nodes found in game map');
-      }
-
-      if (_defaultLoseNode == null) {
-        throw GameMapError('No lose node found in game map');
       }
 
       _isInitialized = true;
@@ -125,14 +125,7 @@ class GameMap {
     if (!_isInitialized) {
       throw GameMapError('GameMap not initialized. Call initialize() first.');
     }
-
-    final node = _nodes[nodeId];
-    if (node == null) {
-      print('Warning: Node $nodeId not found in game map');
-      return _defaultLoseNode;
-    }
-
-    return node;
+    return _nodes[nodeId];
   }
 
   GameMapNode getStartNode() {
@@ -148,15 +141,15 @@ class GameMap {
     return startNode;
   }
 
-  GameMapNode getDefaultLoseNode() {
+  GameMapNode? findLoseNode() {
     if (!_isInitialized) {
       throw GameMapError('GameMap not initialized. Call initialize() first.');
     }
 
-    if (_defaultLoseNode == null) {
-      throw GameMapError('No lose node found in game map');
-    }
-
-    return _defaultLoseNode!;
+    // Find the first node marked as a lose node
+    return _nodes.values.firstWhere(
+      (node) => node.isLoseNode,
+      orElse: () => throw GameMapError('No lose node found in game map'),
+    );
   }
 }
