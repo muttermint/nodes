@@ -35,6 +35,8 @@ class _GamePageState extends State<GamePage> {
   String? error;
   bool isLoading = true;
   final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _soundEnabled = true;
+  bool _imagesEnabled = true;
 
   @override
   void initState() {
@@ -49,7 +51,7 @@ class _GamePageState extends State<GamePage> {
   }
 
   Future<void> _playNodeSound() async {
-    if (currentNode == null || !currentNode!.hasSound) return;
+    if (!_soundEnabled || currentNode == null || !currentNode!.hasSound) return;
 
     try {
       await _audioPlayer.setAsset('assets/sounds/${currentNode!.sound}');
@@ -74,7 +76,6 @@ class _GamePageState extends State<GamePage> {
         isLoading = false;
       });
 
-      // Play sound for initial node if available
       _playNodeSound();
     } catch (e) {
       setState(() {
@@ -93,12 +94,10 @@ class _GamePageState extends State<GamePage> {
       return;
     }
 
-    // If we're already at an end node, don't process further choices
     if (currentNode!.isEndNode) {
-      return; // No further action required for end nodes
+      return;
     }
 
-    // Ensure the index is within bounds
     if (index < 0 || index >= currentNode!.nextNodes.length) {
       setState(() {
         error = 'Invalid choice. Game over.';
@@ -109,18 +108,15 @@ class _GamePageState extends State<GamePage> {
     }
 
     setState(() {
-      // Deduct resources and clamp to minimum of 0
       resources = (resources - currentNode!.resourceCosts[index])
           .clamp(0.0, double.infinity);
 
-      // Check if we've run out of resources
       if (resources <= 0) {
         currentNode = GameMap().getDefaultLoseNode();
         _playNodeSound();
         return;
       }
 
-      // Get the next node ID and transition
       final nextNodeId = currentNode!.nextNodes[index];
       print('Transitioning to node: $nextNodeId');
 
@@ -145,7 +141,89 @@ class _GamePageState extends State<GamePage> {
     _playNodeSound();
   }
 
+  Future<void> _showSettingsDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 300),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.settings),
+                        SizedBox(width: 8),
+                        Text(
+                          'Settings',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.volume_up),
+                      title: const Text('Sound Effects'),
+                      trailing: Switch(
+                        value: _soundEnabled,
+                        onChanged: (bool value) {
+                          setDialogState(() {
+                            setState(() {
+                              _soundEnabled = value;
+                            });
+                          });
+                        },
+                      ),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.image),
+                      title: const Text('Show Images'),
+                      trailing: Switch(
+                        value: _imagesEnabled,
+                        onChanged: (bool value) {
+                          setDialogState(() {
+                            setState(() {
+                              _imagesEnabled = value;
+                            });
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        child: const Text('Close'),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildImage(String imagePath) {
+    if (!_imagesEnabled) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       width: 400,
       height: 300,
@@ -185,8 +263,9 @@ class _GamePageState extends State<GamePage> {
     if (error != null) {
       return Scaffold(
         appBar: AppBar(
-          title: Row(
-            children: const [
+          title: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               Icon(Icons.warning_amber),
               SizedBox(width: 8),
               Text('Game Over'),
@@ -221,8 +300,9 @@ class _GamePageState extends State<GamePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: const [
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             Icon(Icons.castle),
             SizedBox(width: 8),
             Text('Cossack Adventure'),
@@ -233,6 +313,7 @@ class _GamePageState extends State<GamePage> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.diamond),
                   const SizedBox(width: 4),
@@ -243,6 +324,11 @@ class _GamePageState extends State<GamePage> {
                 ],
               ),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _showSettingsDialog,
+            tooltip: 'Settings',
           ),
         ],
       ),
@@ -270,8 +356,9 @@ class _GamePageState extends State<GamePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: const [
+                        const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
                             Icon(Icons.map, size: 28),
                             SizedBox(width: 8),
                             Text(
@@ -298,8 +385,10 @@ class _GamePageState extends State<GamePage> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 20),
-                            _buildImage(currentNode!.image),
+                            if (_imagesEnabled) ...[
+                              const SizedBox(width: 20),
+                              _buildImage(currentNode!.image),
+                            ],
                           ],
                         ),
                         if (currentNode!.isEndNode) ...[
@@ -307,6 +396,7 @@ class _GamePageState extends State<GamePage> {
                           const Divider(),
                           const SizedBox(height: 16),
                           Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
                                 currentNode!.isWinNode
@@ -366,8 +456,9 @@ class _GamePageState extends State<GamePage> {
                 const SizedBox(height: 24),
                 if (!currentNode!.isEndNode &&
                     currentNode!.actionTexts.isNotEmpty) ...[
-                  Row(
-                    children: const [
+                  const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       Icon(Icons.list_alt, size: 24),
                       SizedBox(width: 8),
                       Text(
