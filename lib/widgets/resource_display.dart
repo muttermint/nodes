@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ResourceDisplay extends StatelessWidget {
-  final double resources;
+  final int resources; // Changed from double to int
 
   const ResourceDisplay({
     super.key,
@@ -18,7 +18,7 @@ class ResourceDisplay extends StatelessWidget {
           const Icon(Icons.diamond),
           const SizedBox(width: 4),
           Text(
-            'Resources: ${resources.toStringAsFixed(1)}',
+            'Resources: $resources', // Removed .toStringAsFixed(1) since we're using integers
             style: const TextStyle(fontSize: 16),
           ),
         ],

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class ActionButton extends StatelessWidget {
   final String text;
-  final double resourceCost;
+  final int resourceCost; // Changed from double to int
   final VoidCallback onPressed;
 
   const ActionButton({
@@ -26,7 +26,7 @@ class ActionButton extends StatelessWidget {
           ),
         ),
         child: Text(
-          '$text (${resourceCost.toStringAsFixed(1)} resources)',
+          '$text ($resourceCost resources)', // Removed .toStringAsFixed(1) since we're using integers
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,

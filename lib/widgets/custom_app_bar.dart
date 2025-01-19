@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'resource_display.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final double resources;
+  final int resources; // Changed from double to int
   final VoidCallback onHelpPressed;
   final VoidCallback onSettingsPressed;
 

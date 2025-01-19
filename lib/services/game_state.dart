@@ -4,7 +4,7 @@ import 'audio_service.dart';
 
 class GameState extends ChangeNotifier {
   GameMapNode? currentNode;
-  double resources = 100.0;
+  int resources = 100; // Changed from double to int
   String? error;
   bool isLoading = true;
   bool _soundEnabled = true;
@@ -60,7 +60,7 @@ class GameState extends ChangeNotifier {
     }
 
     resources = (resources - currentNode!.resourceCosts[index])
-        .clamp(0.0, double.infinity);
+        .clamp(0, 999999); // Changed to use integer clamp
 
     if (resources <= 0) {
       currentNode = GameMap().findLoseNode();
@@ -87,7 +87,7 @@ class GameState extends ChangeNotifier {
   }
 
   void restartGame() {
-    resources = 100.0;
+    resources = 100; // Changed from 100.0 to 100
     currentNode = GameMap().getStartNode();
     error = null;
     notifyListeners();

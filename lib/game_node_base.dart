@@ -13,7 +13,7 @@ class GameNodeBase {
   final String description;
   final List<String> nextNodes;
   final List<String> actionTexts;
-  final List<double> resources;
+  final List<int> resources; // Changed from List<double> to List<int>
   final bool isEndNode;
 
   GameNodeBase({
@@ -32,5 +32,5 @@ class GameNodeBase {
   }
 
   /// Gets the resource costs for each action
-  List<double> get resourceCosts => resources;
+  List<int> get resourceCosts => resources; // Changed return type to List<int>
 }

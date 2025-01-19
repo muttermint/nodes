@@ -14,7 +14,7 @@ class GameMapNode extends GameNodeBase {
     required String description,
     required List<String> nextNodes,
     required List<String> actionTexts,
-    required List<double> resources,
+    required List<int> resources, // Changed from List<double> to List<int>
     required bool isEndNode,
     required this.image,
     required this.sound,
@@ -45,12 +45,12 @@ class GameMapNode extends GameNodeBase {
       data['text3']?.toString() ?? '',
     ].where((text) => text.isNotEmpty).toList();
 
-    // Get the resources from resources1, resources2, resources3
-    final List<double> resources = [
+    // Get the resources from resources1, resources2, resources3 as integers
+    final List<int> resources = [
       data['resources1']?.toString() ?? '0',
       data['resources2']?.toString() ?? '0',
       data['resources3']?.toString() ?? '0',
-    ].map((value) => double.tryParse(value) ?? 0.0).toList();
+    ].map((value) => int.tryParse(value) ?? 0).toList();
 
     // Trim resources list to match nextNodes length
     while (resources.length > nextNodes.length) {
@@ -66,7 +66,7 @@ class GameMapNode extends GameNodeBase {
       nodeId: data['nodeID']?.toString() ?? '',
       description: data['description']?.toString() ?? '',
       nextNodes: nextNodes,
-      actionTexts: actionTexts.take(nextNodes.length).toList(), // Ensure actionTexts matches nextNodes
+      actionTexts: actionTexts.take(nextNodes.length).toList(),
       resources: resources,
       isEndNode: isEndNode,
       image: data['image']?.toString() ?? '',
@@ -90,7 +90,7 @@ class GameMapNode extends GameNodeBase {
 class GameMapError extends Error {
   final String message;
   GameMapError(this.message);
-  
+
   @override
   String toString() => 'GameMapError: $message';
 }
@@ -105,14 +105,15 @@ class GameMap {
   GameMapNode? _defaultLoseNode;
 
   bool get isInitialized => _isInitialized;
-  
+
   Future<void> initialize() async {
     if (_isInitialized) return;
 
     try {
       final firebaseService = FirebaseService();
-      final List<Map<String, dynamic>> nodesData = await firebaseService.fetchNodeMapData();
-      
+      final List<Map<String, dynamic>> nodesData =
+          await firebaseService.fetchNodeMapData();
+
       for (final data in nodesData) {
         try {
           final node = GameMapNode.fromFirestore(data);
@@ -145,13 +146,13 @@ class GameMap {
     if (!_isInitialized) {
       throw GameMapError('GameMap not initialized. Call initialize() first.');
     }
-    
+
     final node = _nodes[nodeId];
     if (node == null) {
       print('Warning: Node $nodeId not found in game map');
       return findLoseNode();
     }
-    
+
     return node;
   }
 
@@ -159,12 +160,12 @@ class GameMap {
     if (!_isInitialized) {
       throw GameMapError('GameMap not initialized. Call initialize() first.');
     }
-    
+
     final startNode = _nodes['1'];
     if (startNode == null) {
       throw GameMapError('Start node (ID: 1) not found in game map');
     }
-    
+
     return startNode;
   }
 
@@ -172,12 +173,12 @@ class GameMap {
     if (!_isInitialized) {
       throw GameMapError('GameMap not initialized. Call initialize() first.');
     }
-    
+
     // First try to find the default lose node
     if (_defaultLoseNode != null) {
       return _defaultLoseNode;
     }
-    
+
     // If no default lose node, find the first node marked as lose
     return _nodes.values.firstWhere(
       (node) => node.isLoseNode,
