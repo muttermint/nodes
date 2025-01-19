@@ -152,7 +152,8 @@ class GameBody extends StatelessWidget {
                   node.actionTexts.length,
                   (index) => ActionButton(
                     text: node.actionTexts[index],
-                    resourceCost: node.resourceCosts[index],
+                    pointsChange:
+                        node.actionPoints[index], // Updated to use pointsChange
                     onPressed: () => onActionPressed(index),
                   ),
                 ),

@@ -1,15 +1,17 @@
 import 'package:flutter/foundation.dart';
 import '../game_map.dart';
 import 'audio_service.dart';
+import 'firebase_service.dart';
 
 class GameState extends ChangeNotifier {
   GameMapNode? currentNode;
-  int resources = 100; // Changed from double to int
+  int points = 100;
   String? error;
   bool isLoading = true;
   bool _soundEnabled = true;
   bool _imagesEnabled = true;
   final AudioService _audioService = AudioService();
+  final GameMap _gameMap = GameMap();
 
   bool get soundEnabled => _soundEnabled;
   bool get imagesEnabled => _imagesEnabled;
@@ -20,8 +22,8 @@ class GameState extends ChangeNotifier {
       error = null;
       notifyListeners();
 
-      await GameMap().initialize();
-      currentNode = GameMap().getStartNode();
+      await _gameMap.initialize();
+      currentNode = _gameMap.getStartNode();
 
       isLoading = false;
       notifyListeners();
@@ -53,17 +55,16 @@ class GameState extends ChangeNotifier {
 
     if (index < 0 || index >= currentNode!.nextNodes.length) {
       error = 'Invalid choice. Game over.';
-      currentNode = GameMap().findLoseNode();
+      currentNode = _gameMap.findLoseNode();
       notifyListeners();
       _playNodeSound();
       return;
     }
 
-    resources = (resources - currentNode!.resourceCosts[index])
-        .clamp(0, 999999); // Changed to use integer clamp
+    points = (points + currentNode!.actionPoints[index]).clamp(0, 999999);
 
-    if (resources <= 0) {
-      currentNode = GameMap().findLoseNode();
+    if (points <= 0) {
+      currentNode = _gameMap.findLoseNode();
       notifyListeners();
       _playNodeSound();
       return;
@@ -72,10 +73,10 @@ class GameState extends ChangeNotifier {
     final nextNodeId = currentNode!.nextNodes[index];
     print('Transitioning to node: $nextNodeId');
 
-    final nextNode = GameMap().getNode(nextNodeId);
+    final nextNode = _gameMap.getNode(nextNodeId);
     if (nextNode == null) {
       error = 'Game error: Invalid transition';
-      currentNode = GameMap().findLoseNode();
+      currentNode = _gameMap.findLoseNode();
       notifyListeners();
       _playNodeSound();
       return;
@@ -87,8 +88,8 @@ class GameState extends ChangeNotifier {
   }
 
   void restartGame() {
-    resources = 100; // Changed from 100.0 to 100
-    currentNode = GameMap().getStartNode();
+    points = 100;
+    currentNode = _gameMap.getStartNode();
     error = null;
     notifyListeners();
     _playNodeSound();

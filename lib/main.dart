@@ -91,7 +91,7 @@ class _GamePageState extends State<GamePage> {
 
         return Scaffold(
           appBar: CustomAppBar(
-            resources: gameState.resources,
+            points: gameState.points, // Updated to use points
             onHelpPressed: _showHowToPlayDialog,
             onSettingsPressed: _showSettingsDialog,
           ),

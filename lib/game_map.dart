@@ -1,4 +1,3 @@
-import 'package:meta/meta.dart';
 import 'game_node_base.dart';
 import 'services/firebase_service.dart';
 
@@ -10,11 +9,11 @@ class GameMapNode extends GameNodeBase {
   final String loseReason;
 
   GameMapNode({
-    required String nodeId,
+    required int nodeId, // Changed from String to int
     required String description,
-    required List<int> nextNodes, // Changed from List<String> to List<int>
+    required List<int> nextNodes,
     required List<String> actionTexts,
-    required List<int> resources,
+    required List<int> pointsChange,
     required bool isEndNode,
     required this.image,
     required this.sound,
@@ -24,52 +23,51 @@ class GameMapNode extends GameNodeBase {
   }) : super(
           nodeId: nodeId,
           description: description,
-          nextNodes: nextNodes
-              .map((n) => n.toString())
-              .toList(), // Convert to string for base class
+          nextNodes: nextNodes,
           actionTexts: actionTexts,
-          resources: resources,
+          pointsChange: pointsChange,
           isEndNode: isEndNode,
         );
 
   factory GameMapNode.fromFirestore(Map<String, dynamic> data) {
-    // Get the next nodes from option1, option2, option3 as integers
     final List<int> nextNodes = [
       int.tryParse(data['option1']?.toString() ?? '0') ?? 0,
       int.tryParse(data['option2']?.toString() ?? '0') ?? 0,
       int.tryParse(data['option3']?.toString() ?? '0') ?? 0,
-    ].where((node) => node > 0).toList(); // Filter out 0 and invalid values
+    ].where((node) => node > 0).toList();
 
-    // Get the action texts from text1, text2, text3
     final List<String> actionTexts = [
       data['text1']?.toString() ?? '',
       data['text2']?.toString() ?? '',
       data['text3']?.toString() ?? '',
     ].where((text) => text.isNotEmpty).toList();
 
-    // Get the resources as integers
-    final List<int> resources = [
-      data['resources1']?.toString() ?? '0',
-      data['resources2']?.toString() ?? '0',
-      data['resources3']?.toString() ?? '0',
-    ].map((value) => int.tryParse(value) ?? 0).toList();
+    final List<int> pointsChange = [
+      int.tryParse(data['resources1']?.toString() ?? '0') ?? 0,
+      int.tryParse(data['resources2']?.toString() ?? '0') ?? 0,
+      int.tryParse(data['resources3']?.toString() ?? '0') ?? 0,
+    ];
 
-    // Trim resources list to match nextNodes length
-    while (resources.length > nextNodes.length) {
-      resources.removeLast();
+    while (pointsChange.length > nextNodes.length) {
+      pointsChange.removeLast();
     }
 
-    // A node is an end node if it has no valid next nodes or is explicitly marked as win/lose
     final bool win = data['win'] as bool? ?? false;
     final bool lose = data['lose'] as bool? ?? false;
     final bool isEndNode = win || lose || nextNodes.isEmpty;
 
+    // Parse nodeId as int
+    final int nodeId = int.tryParse(data['nodeID']?.toString() ?? '0') ?? 0;
+    if (nodeId <= 0) {
+      throw GameMapError('Invalid nodeId: $nodeId');
+    }
+
     return GameMapNode(
-      nodeId: data['nodeID']?.toString() ?? '',
+      nodeId: nodeId,
       description: data['description']?.toString() ?? '',
       nextNodes: nextNodes,
       actionTexts: actionTexts.take(nextNodes.length).toList(),
-      resources: resources,
+      pointsChange: pointsChange,
       isEndNode: isEndNode,
       image: data['image']?.toString() ?? '',
       sound: data['sound']?.toString() ?? '',
@@ -102,7 +100,8 @@ class GameMap {
   factory GameMap() => _instance;
   GameMap._internal();
 
-  final Map<String, GameMapNode> _nodes = {};
+  final Map<int, GameMapNode> _nodes =
+      {}; // Changed from Map<String, GameMapNode>
   bool _isInitialized = false;
   GameMapNode? _defaultLoseNode;
 
@@ -144,7 +143,8 @@ class GameMap {
     }
   }
 
-  GameMapNode? getNode(String nodeId) {
+  GameMapNode? getNode(int nodeId) {
+    // Changed from String to int
     if (!_isInitialized) {
       throw GameMapError('GameMap not initialized. Call initialize() first.');
     }
@@ -163,7 +163,7 @@ class GameMap {
       throw GameMapError('GameMap not initialized. Call initialize() first.');
     }
 
-    final startNode = _nodes['1'];
+    final startNode = _nodes[1]; // Changed from '1' to 1
     if (startNode == null) {
       throw GameMapError('Start node (ID: 1) not found in game map');
     }
@@ -176,12 +176,10 @@ class GameMap {
       throw GameMapError('GameMap not initialized. Call initialize() first.');
     }
 
-    // First try to find the default lose node
     if (_defaultLoseNode != null) {
       return _defaultLoseNode;
     }
 
-    // If no default lose node, find the first node marked as lose
     return _nodes.values.firstWhere(
       (node) => node.isLoseNode,
       orElse: () => throw GameMapError('No lose node found in game map'),

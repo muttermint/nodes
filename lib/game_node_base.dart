@@ -9,12 +9,11 @@ class GameNodeError extends Error {
 }
 
 class GameNodeBase {
-  final String nodeId;
+  final int nodeId; // Changed from String to int
   final String description;
-  final List<String>
-      nextNodes; // Keep as strings in base class for compatibility
+  final List<int> nextNodes; // Changed from List<String> to List<int>
   final List<String> actionTexts;
-  final List<int> resources;
+  final List<int> pointsChange;
   final bool isEndNode;
 
   GameNodeBase({
@@ -22,16 +21,13 @@ class GameNodeBase {
     required this.description,
     required this.nextNodes,
     required this.actionTexts,
-    required this.resources,
+    required this.pointsChange,
     required this.isEndNode,
   }) {
-    // Validate that resources match the number of actions
-    if (!isEndNode && resources.length != nextNodes.length) {
-      throw ArgumentError(
-          'Resources count must match the number of next nodes');
+    if (!isEndNode && pointsChange.length != nextNodes.length) {
+      throw ArgumentError('Points changes must match the number of next nodes');
     }
   }
 
-  /// Gets the resource costs for each action
-  List<int> get resourceCosts => resources;
+  List<int> get actionPoints => pointsChange;
 }

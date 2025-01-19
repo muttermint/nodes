@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 class ResourceDisplay extends StatelessWidget {
-  final int resources; // Changed from double to int
+  final int points; // Renamed from resources
 
   const ResourceDisplay({
     super.key,
-    required this.resources,
+    required this.points, // Renamed parameter
   });
 
   @override
@@ -15,10 +15,10 @@ class ResourceDisplay extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.diamond),
+          const Icon(Icons.stars), // Changed from diamond to stars
           const SizedBox(width: 4),
           Text(
-            'Resources: $resources', // Removed .toStringAsFixed(1) since we're using integers
+            'Points: $points',
             style: const TextStyle(fontSize: 16),
           ),
         ],

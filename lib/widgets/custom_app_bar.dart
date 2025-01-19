@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'resource_display.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final int resources; // Changed from double to int
+  final int points; // Changed from resources to points
   final VoidCallback onHelpPressed;
   final VoidCallback onSettingsPressed;
 
   const CustomAppBar({
     super.key,
-    required this.resources,
+    required this.points, // Changed parameter name
     required this.onHelpPressed,
     required this.onSettingsPressed,
   });
@@ -26,7 +26,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         Center(
-          child: ResourceDisplay(resources: resources),
+          child: ResourceDisplay(points: points), // Updated to use points
         ),
         IconButton(
           icon: const Icon(Icons.help_outline),

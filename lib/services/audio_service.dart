@@ -7,6 +7,7 @@ class AudioService {
 
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _soundEnabled = true;
+  String? _currentSound;
 
   bool get soundEnabled => _soundEnabled;
   set soundEnabled(bool value) => _soundEnabled = value;
@@ -14,14 +15,28 @@ class AudioService {
   Future<void> playSound(String soundFile) async {
     if (!_soundEnabled || soundFile.isEmpty) return;
 
+    // Don't replay the same sound
+    if (_currentSound == soundFile && _audioPlayer.playing) return;
+
     try {
+      // Stop any currently playing sound
+      await _audioPlayer.stop();
+
+      _currentSound = soundFile;
       await _audioPlayer.setAsset('assets/sounds/$soundFile');
-      // Check if the audio player is already playing before playing again
-      if (!_audioPlayer.playing) {
-        await _audioPlayer.play();
-      }
+      await _audioPlayer.play();
     } catch (e) {
       print('Error playing sound: $e');
+      _currentSound = null;
+    }
+  }
+
+  Future<void> stopSound() async {
+    try {
+      await _audioPlayer.stop();
+      _currentSound = null;
+    } catch (e) {
+      print('Error stopping sound: $e');
     }
   }
 
