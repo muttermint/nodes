@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
-import '../firebase_options.dart';
+import 'firebase_options.dart';
 
 class FirebaseService {
   static final FirebaseService _instance = FirebaseService._internal();
@@ -44,7 +44,8 @@ class FirebaseService {
       return snapshot.docs
           .map((doc) => {
                 ...doc.data() as Map<String, dynamic>,
-                'nodeId': (doc.get('nodeID') ?? '').toString(), // Convert nodeID to string
+                'nodeId': (doc.get('nodeID') ?? '')
+                    .toString(), // Convert nodeID to string
               })
           .toList();
     } catch (e) {
@@ -53,7 +54,8 @@ class FirebaseService {
     }
   }
 
-  Future<void> logGameEvent(String eventName, {Map<String, dynamic>? parameters}) async {
+  Future<void> logGameEvent(String eventName,
+      {Map<String, dynamic>? parameters}) async {
     if (!_initialized) return;
 
     try {
