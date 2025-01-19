@@ -3,6 +3,7 @@ import 'package:just_audio/just_audio.dart';
 import 'dart:math' as math;
 import 'game_map.dart';
 import 'services/firebase_service.dart';
+import 'widgets/how_to_play_dialog.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -180,6 +181,13 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
       error = null;
     });
     _playNodeSound();
+  }
+
+  void _showHowToPlay() {
+    showDialog(
+      context: context,
+      builder: (context) => const HowToPlayDialog(),
+    );
   }
 
   Widget _buildFancyPlayAgainButton() {
@@ -415,6 +423,11 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: _showHowToPlay,
+            tooltip: 'How to Play',
+          ),
           Center(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
