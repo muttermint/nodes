@@ -4,7 +4,7 @@ import 'audio_service.dart';
 
 class GameState extends ChangeNotifier {
   GameMapNode? currentNode;
-  int points = 0; // Changed from 100 to 0
+  int points = 0;
   String? error;
   bool isLoading = true;
   bool _soundEnabled = true;

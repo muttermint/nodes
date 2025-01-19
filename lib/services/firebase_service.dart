@@ -36,17 +36,11 @@ class FirebaseService {
     }
 
     try {
-      final QuerySnapshot snapshot = await _firestore
-          .collection('node_map')
-          .orderBy('nodeID') // Changed from 'nodeId'
-          .get();
+      final QuerySnapshot snapshot =
+          await _firestore.collection('node_map').orderBy('nodeID').get();
 
       return snapshot.docs
-          .map((doc) => {
-                ...doc.data() as Map<String, dynamic>,
-                'nodeId': (doc.get('nodeID') ?? '')
-                    .toString(), // Convert nodeID to string
-              })
+          .map((doc) => doc.data() as Map<String, dynamic>)
           .toList();
     } catch (e) {
       print('Error fetching node map data: $e');
