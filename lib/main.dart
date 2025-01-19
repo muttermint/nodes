@@ -7,6 +7,7 @@ import 'widgets/how_to_play_dialog.dart';
 import 'widgets/action_button.dart';
 import 'widgets/resource_display.dart';
 import 'widgets/game_over_screen.dart';
+import 'widgets/loading_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -274,12 +275,7 @@ class _GamePageState extends State<GamePage>
     }
 
     if (isLoading || currentNode == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Loading...')),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const LoadingScreen();
     }
 
     return Scaffold(
