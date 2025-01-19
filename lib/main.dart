@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'game_map.dart';
+import 'services/firebase_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase first
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  final firebaseService = FirebaseService();
+  await firebaseService.initialize();
+
   runApp(const MyApp());
 }
 
@@ -16,6 +28,7 @@ class MyApp extends StatelessWidget {
       title: 'Cossack Adventure',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        useMaterial3: true,
       ),
       home: const GamePage(),
     );
@@ -101,8 +114,9 @@ class _GamePageState extends State<GamePage> {
     if (index < 0 || index >= currentNode!.nextNodes.length) {
       setState(() {
         error = 'Invalid choice. Game over.';
-        _transitionToLoseState('Invalid choice made');
+        currentNode = GameMap().findLoseNode();
       });
+      _playNodeSound();
       return;
     }
 
@@ -111,7 +125,8 @@ class _GamePageState extends State<GamePage> {
           .clamp(0.0, double.infinity);
 
       if (resources <= 0) {
-        _transitionToLoseState('Out of resources');
+        currentNode = GameMap().findLoseNode();
+        _playNodeSound();
         return;
       }
 
@@ -121,31 +136,13 @@ class _GamePageState extends State<GamePage> {
       final nextNode = GameMap().getNode(nextNodeId);
       if (nextNode == null) {
         error = 'Game error: Invalid transition';
-        _transitionToLoseState('Invalid game state');
+        currentNode = GameMap().findLoseNode();
+        _playNodeSound();
         return;
       }
-
       currentNode = nextNode;
-      if (currentNode!.hasSound) {
-        _playNodeSound();
-      }
+      _playNodeSound();
     });
-  }
-
-  void _transitionToLoseState(String reason) {
-    try {
-      final loseNode = GameMap().findLoseNode();
-      setState(() {
-        currentNode = loseNode;
-        if (currentNode?.hasSound == true) {
-          _playNodeSound();
-        }
-      });
-    } catch (e) {
-      setState(() {
-        error = 'Critical game error: No lose state available';
-      });
-    }
   }
 
   void restartGame() {
@@ -449,20 +446,22 @@ class _GamePageState extends State<GamePage> {
                             ),
                           ],
                           const SizedBox(height: 20),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('Play Again'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 40,
-                                vertical: 16,
+                          Center(
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Play Again'),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 40,
+                                  vertical: 16,
+                                ),
+                                backgroundColor: const Color(0xFF2ECC71),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
-                              backgroundColor: const Color(0xFF2ECC71),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
+                              onPressed: restartGame,
                             ),
-                            onPressed: restartGame,
                           ),
                         ],
                       ],

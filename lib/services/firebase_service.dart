@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import '../firebase_options.dart';
 
 class FirebaseService {
   static final FirebaseService _instance = FirebaseService._internal();
@@ -8,24 +10,24 @@ class FirebaseService {
 
   bool _initialized = false;
   late FirebaseFirestore _firestore;
+  late FirebaseAnalytics _analytics;
 
   Future<void> initialize() async {
     if (_initialized) return;
 
-    await Firebase.initializeApp(
-      options: const FirebaseOptions(
-        apiKey: "AIzaSyDIRaTPS_FjjPk_Sw21iW_gy0KNE490D-8",
-        authDomain: "village-attack.firebaseapp.com",
-        projectId: "village-attack",
-        storageBucket: "village-attack.appspot.com",
-        messagingSenderId: "451264260248",
-        appId: "1:451264260248:web:42890d2cf244341bc8c8ed",
-        measurementId: "G-3TSSN1G1VC",
-      ),
-    );
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
 
-    _firestore = FirebaseFirestore.instance;
-    _initialized = true;
+      _firestore = FirebaseFirestore.instance;
+      _analytics = FirebaseAnalytics.instance;
+      _initialized = true;
+      print('Firebase initialized successfully');
+    } catch (e) {
+      print('Error initializing Firebase: $e');
+      rethrow;
+    }
   }
 
   Future<List<Map<String, dynamic>>> fetchNodeMapData() async {
@@ -34,17 +36,35 @@ class FirebaseService {
     }
 
     try {
-      final QuerySnapshot snapshot =
-          await _firestore.collection('node_map').get();
-
-      print('node_map');
+      final QuerySnapshot snapshot = await _firestore
+          .collection('node_map')
+          .orderBy('nodeID') // Changed from 'nodeId'
+          .get();
 
       return snapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
+          .map((doc) => {
+                ...doc.data() as Map<String, dynamic>,
+                'nodeId': (doc.get('nodeID') ?? '')
+                    .toString(), // Convert nodeID to string
+              })
           .toList();
     } catch (e) {
       print('Error fetching node map data: $e');
       rethrow;
+    }
+  }
+
+  Future<void> logGameEvent(String eventName,
+      {Map<String, dynamic>? parameters}) async {
+    if (!_initialized) return;
+
+    try {
+      await _analytics.logEvent(
+        name: eventName,
+        parameters: parameters,
+      );
+    } catch (e) {
+      print('Error logging analytics event: $e');
     }
   }
 }

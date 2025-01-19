@@ -24,7 +24,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/game_map.csv
     - assets/images/default.webp
     - assets/images/A_dynamic_battle_scene.webp
     - assets/images/Cossacks_surveying_village.webp
