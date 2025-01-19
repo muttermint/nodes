@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'fancy_play_again_button.dart';
 
 class GameOverScreen extends StatelessWidget {
   final String error;

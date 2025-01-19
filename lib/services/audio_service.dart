@@ -16,7 +16,10 @@ class AudioService {
 
     try {
       await _audioPlayer.setAsset('assets/sounds/$soundFile');
-      await _audioPlayer.play();
+      // Check if the audio player is already playing before playing again
+      if (!_audioPlayer.playing) {
+        await _audioPlayer.play();
+      }
     } catch (e) {
       print('Error playing sound: $e');
     }

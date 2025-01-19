@@ -8,6 +8,7 @@ import 'widgets/settings_dialog.dart';
 import 'widgets/game_over_screen.dart';
 import 'widgets/loading_screen.dart';
 import 'widgets/how_to_play_dialog.dart';
+import 'widgets/fancy_play_again_button.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,22 +79,8 @@ class _GamePageState extends State<GamePage> {
         if (gameState.error != null) {
           return GameOverScreen(
             error: gameState.error!,
-            playAgainButton: ElevatedButton(
+            playAgainButton: FancyPlayAgainButton(
               onPressed: gameState.restartGame,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
-                ),
-                backgroundColor: const Color(0xFF27AE60),
-              ),
-              child: const Text(
-                'Play Again',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
             ),
           );
         }

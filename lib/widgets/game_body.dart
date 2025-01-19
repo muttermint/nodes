@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../game_map.dart';
 import 'action_button.dart';
 import 'game_image.dart';
+import 'fancy_play_again_button.dart';
 
 class GameBody extends StatelessWidget {
   final GameMapNode node;
@@ -119,21 +120,9 @@ class GameBody extends StatelessWidget {
                           ),
                         ],
                         const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: onRestartPressed,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 32,
-                              vertical: 16,
-                            ),
-                            backgroundColor: const Color(0xFF27AE60),
-                          ),
-                          child: const Text(
-                            'Play Again',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        Center(
+                          child: FancyPlayAgainButton(
+                            onPressed: onRestartPressed,
                           ),
                         ),
                       ],
