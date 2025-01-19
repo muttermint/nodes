@@ -12,9 +12,9 @@ class GameMapNode extends GameNodeBase {
   GameMapNode({
     required String nodeId,
     required String description,
-    required List<String> nextNodes,
+    required List<int> nextNodes, // Changed from List<String> to List<int>
     required List<String> actionTexts,
-    required List<int> resources, // Changed from List<double> to List<int>
+    required List<int> resources,
     required bool isEndNode,
     required this.image,
     required this.sound,
@@ -24,19 +24,21 @@ class GameMapNode extends GameNodeBase {
   }) : super(
           nodeId: nodeId,
           description: description,
-          nextNodes: nextNodes,
+          nextNodes: nextNodes
+              .map((n) => n.toString())
+              .toList(), // Convert to string for base class
           actionTexts: actionTexts,
           resources: resources,
           isEndNode: isEndNode,
         );
 
   factory GameMapNode.fromFirestore(Map<String, dynamic> data) {
-    // Get the next nodes from option1, option2, option3
-    final List<String> nextNodes = [
-      data['option1']?.toString() ?? '',
-      data['option2']?.toString() ?? '',
-      data['option3']?.toString() ?? '',
-    ].where((node) => node.isNotEmpty && node != '0').toList();
+    // Get the next nodes from option1, option2, option3 as integers
+    final List<int> nextNodes = [
+      int.tryParse(data['option1']?.toString() ?? '0') ?? 0,
+      int.tryParse(data['option2']?.toString() ?? '0') ?? 0,
+      int.tryParse(data['option3']?.toString() ?? '0') ?? 0,
+    ].where((node) => node > 0).toList(); // Filter out 0 and invalid values
 
     // Get the action texts from text1, text2, text3
     final List<String> actionTexts = [
@@ -45,7 +47,7 @@ class GameMapNode extends GameNodeBase {
       data['text3']?.toString() ?? '',
     ].where((text) => text.isNotEmpty).toList();
 
-    // Get the resources from resources1, resources2, resources3 as integers
+    // Get the resources as integers
     final List<int> resources = [
       data['resources1']?.toString() ?? '0',
       data['resources2']?.toString() ?? '0',

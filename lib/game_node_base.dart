@@ -11,9 +11,10 @@ class GameNodeError extends Error {
 class GameNodeBase {
   final String nodeId;
   final String description;
-  final List<String> nextNodes;
+  final List<String>
+      nextNodes; // Keep as strings in base class for compatibility
   final List<String> actionTexts;
-  final List<int> resources; // Changed from List<double> to List<int>
+  final List<int> resources;
   final bool isEndNode;
 
   GameNodeBase({
@@ -32,5 +33,5 @@ class GameNodeBase {
   }
 
   /// Gets the resource costs for each action
-  List<int> get resourceCosts => resources; // Changed return type to List<int>
+  List<int> get resourceCosts => resources;
 }
