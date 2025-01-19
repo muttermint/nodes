@@ -5,6 +5,7 @@ import 'game_map.dart';
 import 'services/firebase_service.dart';
 import 'widgets/how_to_play_dialog.dart';
 import 'widgets/action_button.dart';
+import 'widgets/resource_display.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -315,20 +316,7 @@ class _GamePageState extends State<GamePage>
             tooltip: 'How to Play',
           ),
           Center(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.diamond),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Resources: ${resources.toStringAsFixed(1)}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ],
-              ),
-            ),
+            child: ResourceDisplay(resources: resources),
           ),
           IconButton(
             icon: const Icon(Icons.settings),
