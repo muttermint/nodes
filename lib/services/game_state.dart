@@ -87,7 +87,7 @@ class GameState extends ChangeNotifier {
   }
 
   void restartGame() {
-    points = 0; // Changed from 100 to 0
+    points = 0;
     currentNode = _gameMap.getStartNode();
     error = null;
     notifyListeners();

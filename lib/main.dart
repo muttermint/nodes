@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => GameState(),
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Cossack Adventure',
         theme: ThemeData(
           primarySwatch: Colors.blue,
@@ -91,7 +92,7 @@ class _GamePageState extends State<GamePage> {
 
         return Scaffold(
           appBar: CustomAppBar(
-            points: gameState.points, // Updated to use points
+            points: gameState.points,
             onHelpPressed: _showHowToPlayDialog,
             onSettingsPressed: _showSettingsDialog,
           ),
