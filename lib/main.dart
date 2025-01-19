@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'game_map.dart';
+import 'package:provider/provider.dart';
 import 'services/firebase_service.dart';
-import 'services/audio_service.dart';
+import 'services/game_state.dart';
 import 'widgets/custom_app_bar.dart';
 import 'widgets/game_body.dart';
 import 'widgets/settings_dialog.dart';
@@ -20,12 +20,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Cossack Adventure',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return ChangeNotifierProvider(
+      create: (_) => GameState(),
+      child: MaterialApp(
+        title: 'Cossack Adventure',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: const GamePage(),
       ),
-      home: const GamePage(),
     );
   }
 }
@@ -38,134 +41,23 @@ class GamePage extends StatefulWidget {
 }
 
 class _GamePageState extends State<GamePage> {
-  GameMapNode? currentNode;
-  double resources = 100.0;
-  String? error;
-  bool isLoading = true;
-  final AudioService _audioService = AudioService();
-  bool _soundEnabled = true;
-  bool _imagesEnabled = true;
-
   @override
   void initState() {
     super.initState();
-    _initializeGame();
-  }
-
-  @override
-  void dispose() {
-    _audioService.dispose();
-    super.dispose();
-  }
-
-  Future<void> _initializeGame() async {
-    try {
-      setState(() {
-        isLoading = true;
-        error = null;
-      });
-
-      await GameMap().initialize();
-      final startNode = GameMap().getStartNode();
-
-      setState(() {
-        currentNode = startNode;
-        isLoading = false;
-      });
-
-      _playNodeSound();
-    } catch (e) {
-      setState(() {
-        error = 'Error loading game: $e';
-        isLoading = false;
-      });
-      print('Error in initState: $e');
-    }
-  }
-
-  Future<void> _playNodeSound() async {
-    if (!_soundEnabled || currentNode == null || !currentNode!.hasSound) return;
-    await _audioService.playSound(currentNode!.sound);
-  }
-
-  void makeChoice(int index) {
-    if (currentNode == null) {
-      setState(() {
-        error = 'Game error: No current node';
-      });
-      return;
-    }
-
-    if (currentNode!.isEndNode) {
-      return;
-    }
-
-    if (index < 0 || index >= currentNode!.nextNodes.length) {
-      setState(() {
-        error = 'Invalid choice. Game over.';
-        currentNode = GameMap().findLoseNode();
-      });
-      _playNodeSound();
-      return;
-    }
-
-    setState(() {
-      resources = (resources - currentNode!.resourceCosts[index])
-          .clamp(0.0, double.infinity);
-
-      if (resources <= 0) {
-        currentNode = GameMap().findLoseNode();
-        _playNodeSound();
-        return;
-      }
-
-      final nextNodeId = currentNode!.nextNodes[index];
-      print('Transitioning to node: $nextNodeId');
-
-      final nextNode = GameMap().getNode(nextNodeId);
-      if (nextNode == null) {
-        error = 'Game error: Invalid transition';
-        currentNode = GameMap().findLoseNode();
-        _playNodeSound();
-        return;
-      }
-      currentNode = nextNode;
-      _playNodeSound();
-    });
-  }
-
-  void restartGame() {
-    setState(() {
-      resources = 100.0;
-      currentNode = GameMap().getStartNode();
-      error = null;
-    });
-    _playNodeSound();
+    // Initialize the game state when the page loads
+    Future.microtask(() => context.read<GameState>().initialize());
   }
 
   void _showSettingsDialog() {
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
+      builder: (context) => Consumer<GameState>(
+        builder: (context, gameState, _) {
           return SettingsDialog(
-            soundEnabled: _soundEnabled,
-            imagesEnabled: _imagesEnabled,
-            onSoundChanged: (value) {
-              setDialogState(() {
-                setState(() {
-                  _soundEnabled = value;
-                  _audioService.soundEnabled = value;
-                });
-              });
-            },
-            onImagesChanged: (value) {
-              setDialogState(() {
-                setState(() {
-                  _imagesEnabled = value;
-                });
-              });
-            },
+            soundEnabled: gameState.soundEnabled,
+            imagesEnabled: gameState.imagesEnabled,
+            onSoundChanged: gameState.toggleSound,
+            onImagesChanged: gameState.toggleImages,
           );
         },
       ),
@@ -181,45 +73,49 @@ class _GamePageState extends State<GamePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (error != null) {
-      return GameOverScreen(
-        error: error!,
-        playAgainButton: ElevatedButton(
-          onPressed: restartGame,
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 32,
-              vertical: 16,
+    return Consumer<GameState>(
+      builder: (context, gameState, _) {
+        if (gameState.error != null) {
+          return GameOverScreen(
+            error: gameState.error!,
+            playAgainButton: ElevatedButton(
+              onPressed: gameState.restartGame,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                backgroundColor: const Color(0xFF27AE60),
+              ),
+              child: const Text(
+                'Play Again',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-            backgroundColor: const Color(0xFF27AE60),
-          ),
-          child: const Text(
-            'Play Again',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      );
-    }
+          );
+        }
 
-    if (isLoading || currentNode == null) {
-      return const LoadingScreen();
-    }
+        if (gameState.isLoading || gameState.currentNode == null) {
+          return const LoadingScreen();
+        }
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        resources: resources,
-        onHelpPressed: _showHowToPlayDialog,
-        onSettingsPressed: _showSettingsDialog,
-      ),
-      body: GameBody(
-        node: currentNode!,
-        imagesEnabled: _imagesEnabled,
-        onActionPressed: makeChoice,
-        onRestartPressed: restartGame,
-      ),
+        return Scaffold(
+          appBar: CustomAppBar(
+            resources: gameState.resources,
+            onHelpPressed: _showHowToPlayDialog,
+            onSettingsPressed: _showSettingsDialog,
+          ),
+          body: GameBody(
+            node: gameState.currentNode!,
+            imagesEnabled: gameState.imagesEnabled,
+            onActionPressed: gameState.makeChoice,
+            onRestartPressed: gameState.restartGame,
+          ),
+        );
+      },
     );
   }
 }
