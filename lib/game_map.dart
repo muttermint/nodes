@@ -43,9 +43,9 @@ class GameMapNode extends GameNodeBase {
     ].where((text) => text.isNotEmpty).toList();
 
     final List<int> pointsChange = [
-      int.tryParse(data['resources1']?.toString() ?? '0') ?? 0,
-      int.tryParse(data['resources2']?.toString() ?? '0') ?? 0,
-      int.tryParse(data['resources3']?.toString() ?? '0') ?? 0,
+      int.tryParse(data['points1']?.toString() ?? '0') ?? 0,
+      int.tryParse(data['points2']?.toString() ?? '0') ?? 0,
+      int.tryParse(data['points3']?.toString() ?? '0') ?? 0,
     ];
 
     while (pointsChange.length > nextNodes.length) {
