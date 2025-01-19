@@ -3,7 +3,7 @@ import 'package:meta/meta.dart';
 class GameNodeError extends Error {
   final String message;
   GameNodeError(this.message);
-  
+
   @override
   String toString() => 'GameNodeError: $message';
 }
@@ -26,7 +26,8 @@ class GameNodeBase {
   }) {
     // Validate that resources match the number of actions
     if (!isEndNode && resources.length != nextNodes.length) {
-      throw ArgumentError('Resources count must match the number of next nodes');
+      throw ArgumentError(
+          'Resources count must match the number of next nodes');
     }
   }
 
