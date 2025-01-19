@@ -1,21 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'dart:math' as math;
 import 'game_map.dart';
 import 'services/firebase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Firebase first
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
-  final firebaseService = FirebaseService();
-  await firebaseService.initialize();
-  
+  await FirebaseService().initialize();
   runApp(const MyApp());
 }
 
@@ -28,7 +19,6 @@ class MyApp extends StatelessWidget {
       title: 'Cossack Adventure',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        useMaterial3: true,
       ),
       home: const GamePage(),
     );
@@ -42,7 +32,7 @@ class GamePage extends StatefulWidget {
   State<GamePage> createState() => _GamePageState();
 }
 
-class _GamePageState extends State<GamePage> {
+class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin {
   GameMapNode? currentNode;
   double resources = 100.0;
   String? error;
@@ -50,28 +40,56 @@ class _GamePageState extends State<GamePage> {
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _soundEnabled = true;
   bool _imagesEnabled = true;
+  
+  late final AnimationController _buttonAnimationController;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _rotateAnimation;
+  bool _isHovering = false;
 
   @override
   void initState() {
     super.initState();
     _initializeGame();
+    
+    _buttonAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 1.1)
+            .chain(CurveTween(curve: Curves.easeInOutBack)),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.1, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeInOutBack)),
+        weight: 50,
+      ),
+    ]).animate(_buttonAnimationController);
+
+    _rotateAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0, end: math.pi / 30)
+            .chain(CurveTween(curve: Curves.easeInOutBack)),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: math.pi / 30, end: 0)
+            .chain(CurveTween(curve: Curves.easeInOutBack)),
+        weight: 50,
+      ),
+    ]).animate(_buttonAnimationController);
+
+    _buttonAnimationController.repeat();
   }
 
   @override
   void dispose() {
+    _buttonAnimationController.dispose();
     _audioPlayer.dispose();
     super.dispose();
-  }
-
-  Future<void> _playNodeSound() async {
-    if (!_soundEnabled || currentNode == null || !currentNode!.hasSound) return;
-
-    try {
-      await _audioPlayer.setAsset('assets/sounds/${currentNode!.sound}');
-      await _audioPlayer.play();
-    } catch (e) {
-      print('Error playing sound: $e');
-    }
   }
 
   Future<void> _initializeGame() async {
@@ -96,6 +114,17 @@ class _GamePageState extends State<GamePage> {
         isLoading = false;
       });
       print('Error in initState: $e');
+    }
+  }
+
+  Future<void> _playNodeSound() async {
+    if (!_soundEnabled || currentNode == null || !currentNode!.hasSound) return;
+
+    try {
+      await _audioPlayer.setAsset('assets/sounds/${currentNode!.sound}');
+      await _audioPlayer.play();
+    } catch (e) {
+      print('Error playing sound: $e');
     }
   }
 
@@ -151,6 +180,114 @@ class _GamePageState extends State<GamePage> {
       error = null;
     });
     _playNodeSound();
+  }
+
+  Widget _buildFancyPlayAgainButton() {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovering = true),
+      onExit: (_) => setState(() => _isHovering = false),
+      child: AnimatedBuilder(
+        animation: _buttonAnimationController,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _isHovering ? 1.15 : _scaleAnimation.value,
+            child: Transform.rotate(
+              angle: _isHovering ? 0 : _rotateAnimation.value,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _isHovering 
+                          ? const Color(0xFF27AE60).withOpacity(0.5)
+                          : const Color(0xFF27AE60).withOpacity(0.3),
+                      blurRadius: _isHovering ? 15 : 10,
+                      spreadRadius: _isHovering ? 5 : 2,
+                    ),
+                  ],
+                ),
+                child: ElevatedButton.icon(
+                  icon: AnimatedRotation(
+                    duration: const Duration(milliseconds: 500),
+                    turns: _isHovering ? 1 : 0,
+                    child: const Icon(
+                      Icons.refresh,
+                      size: 28,
+                    ),
+                  ),
+                  label: const Text(
+                    'Play Again',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40,
+                      vertical: 20,
+                    ),
+                    backgroundColor: _isHovering
+                        ? const Color(0xFF2ECC71)
+                        : const Color(0xFF27AE60),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    elevation: _isHovering ? 8 : 4,
+                  ),
+                  onPressed: () {
+                    _buttonAnimationController.forward(from: 0).then((_) {
+                      restartGame();
+                    });
+                  },
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildImage(String imagePath) {
+    if (!_imagesEnabled) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      width: 400,
+      height: 300,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFFE0E0E0),
+          width: 1,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.asset(
+          'assets/images/${imagePath.isNotEmpty ? imagePath : 'default.webp'}',
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: const Color(0xFFF5F5F5),
+              child: const Center(
+                child: Text(
+                  'Image not available',
+                  style: TextStyle(
+                    color: Color(0xFF9E9E9E),
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _showSettingsDialog() async {
@@ -231,45 +368,6 @@ class _GamePageState extends State<GamePage> {
     );
   }
 
-  Widget _buildImage(String imagePath) {
-    if (!_imagesEnabled) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      width: 400,
-      height: 300,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: const Color(0xFFE0E0E0),
-          width: 1,
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.asset(
-          'assets/images/${imagePath.isNotEmpty ? imagePath : 'default.webp'}',
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              color: const Color(0xFFF5F5F5),
-              child: const Center(
-                child: Text(
-                  'Image not available',
-                  style: TextStyle(
-                    color: Color(0xFF9E9E9E),
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (error != null) {
@@ -290,11 +388,7 @@ class _GamePageState extends State<GamePage> {
             children: [
               Text(error!, style: const TextStyle(color: Colors.red)),
               const SizedBox(height: 20),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.refresh),
-                label: const Text('Restart Game'),
-                onPressed: restartGame,
-              ),
+              _buildFancyPlayAgainButton(),
             ],
           ),
         ),
@@ -430,8 +524,7 @@ class _GamePageState extends State<GamePage> {
                               ),
                             ],
                           ),
-                          if (currentNode!.loseReason.isNotEmpty &&
-                              currentNode!.loseReason != 'Not applicable') ...[
+                          if (currentNode!.loseReason.isNotEmpty) ...[
                             const SizedBox(height: 8),
                             Text(
                               currentNode!.loseReason,
@@ -443,23 +536,7 @@ class _GamePageState extends State<GamePage> {
                             ),
                           ],
                           const SizedBox(height: 20),
-                          Center(
-                            child: ElevatedButton.icon(
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Play Again'),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 40,
-                                  vertical: 16,
-                                ),
-                                backgroundColor: const Color(0xFF2ECC71),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              onPressed: restartGame,
-                            ),
-                          ),
+                          _buildFancyPlayAgainButton(),
                         ],
                       ],
                     ),
@@ -488,14 +565,7 @@ class _GamePageState extends State<GamePage> {
                     (index) => Padding(
                       padding: const EdgeInsets.only(bottom: 12.0),
                       child: ElevatedButton(
-                        child: Text(
-                          '${currentNode!.actionTexts[index]} (${currentNode!.resourceCosts[index].toStringAsFixed(1)} resources)',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                        onPressed: () => makeChoice(index),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 20,
@@ -506,7 +576,14 @@ class _GamePageState extends State<GamePage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        onPressed: () => makeChoice(index),
+                        child: Text(
+                          '${currentNode!.actionTexts[index]} (${currentNode!.resourceCosts[index].toStringAsFixed(1)} resources)',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
                   ),
