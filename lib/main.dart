@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'dart:math' as math;
 import 'game_map.dart';
 import 'services/firebase_service.dart';
-import 'widgets/how_to_play_dialog.dart';
-import 'widgets/action_button.dart';
-import 'widgets/resource_display.dart';
+import 'services/audio_service.dart';
+import 'widgets/settings_dialog.dart';
 import 'widgets/game_over_screen.dart';
 import 'widgets/loading_screen.dart';
+import 'widgets/action_button.dart';
+import 'widgets/resource_display.dart';
+import 'widgets/how_to_play_dialog.dart';
+import 'widgets/game_image.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,64 +39,24 @@ class GamePage extends StatefulWidget {
   State<GamePage> createState() => _GamePageState();
 }
 
-class _GamePageState extends State<GamePage>
-    with SingleTickerProviderStateMixin {
+class _GamePageState extends State<GamePage> {
   GameMapNode? currentNode;
   double resources = 100.0;
   String? error;
   bool isLoading = true;
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioService _audioService = AudioService();
   bool _soundEnabled = true;
   bool _imagesEnabled = true;
-
-  late final AnimationController _buttonAnimationController;
-  late final Animation<double> _scaleAnimation;
-  late final Animation<double> _rotateAnimation;
-  bool _isHovering = false;
 
   @override
   void initState() {
     super.initState();
     _initializeGame();
-
-    _buttonAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    );
-
-    _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.1)
-            .chain(CurveTween(curve: Curves.easeInOutBack)),
-        weight: 50,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.1, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeInOutBack)),
-        weight: 50,
-      ),
-    ]).animate(_buttonAnimationController);
-
-    _rotateAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0, end: math.pi / 30)
-            .chain(CurveTween(curve: Curves.easeInOutBack)),
-        weight: 50,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: math.pi / 30, end: 0)
-            .chain(CurveTween(curve: Curves.easeInOutBack)),
-        weight: 50,
-      ),
-    ]).animate(_buttonAnimationController);
-
-    _buttonAnimationController.repeat();
   }
 
   @override
   void dispose() {
-    _buttonAnimationController.dispose();
-    _audioPlayer.dispose();
+    _audioService.dispose();
     super.dispose();
   }
 
@@ -125,13 +87,7 @@ class _GamePageState extends State<GamePage>
 
   Future<void> _playNodeSound() async {
     if (!_soundEnabled || currentNode == null || !currentNode!.hasSound) return;
-
-    try {
-      await _audioPlayer.setAsset('assets/sounds/${currentNode!.sound}');
-      await _audioPlayer.play();
-    } catch (e) {
-      print('Error playing sound: $e');
-    }
+    await _audioService.playSound(currentNode!.sound);
   }
 
   void makeChoice(int index) {
@@ -189,79 +145,39 @@ class _GamePageState extends State<GamePage>
     _playNodeSound();
   }
 
-  void _showHowToPlay() {
+  void _showSettingsDialog() {
     showDialog(
       context: context,
-      builder: (context) => const HowToPlayDialog(),
-    );
-  }
-
-  Widget _buildFancyPlayAgainButton() {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovering = true),
-      onExit: (_) => setState(() => _isHovering = false),
-      child: AnimatedBuilder(
-        animation: _buttonAnimationController,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _isHovering ? 1.15 : _scaleAnimation.value,
-            child: Transform.rotate(
-              angle: _isHovering ? 0 : _rotateAnimation.value,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _isHovering
-                          ? const Color(0xFF27AE60).withOpacity(0.5)
-                          : const Color(0xFF27AE60).withOpacity(0.3),
-                      blurRadius: _isHovering ? 15 : 10,
-                      spreadRadius: _isHovering ? 5 : 2,
-                    ),
-                  ],
-                ),
-                child: ElevatedButton.icon(
-                  icon: AnimatedRotation(
-                    duration: const Duration(milliseconds: 500),
-                    turns: _isHovering ? 1 : 0,
-                    child: const Icon(
-                      Icons.refresh,
-                      size: 28,
-                    ),
-                  ),
-                  label: const Text(
-                    'Play Again',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 40,
-                      vertical: 20,
-                    ),
-                    backgroundColor: _isHovering
-                        ? const Color(0xFF2ECC71)
-                        : const Color(0xFF27AE60),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    elevation: _isHovering ? 8 : 4,
-                  ),
-                  onPressed: () {
-                    _buttonAnimationController.forward(from: 0).then((_) {
-                      restartGame();
-                    });
-                  },
-                ),
-              ),
-            ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return SettingsDialog(
+            soundEnabled: _soundEnabled,
+            imagesEnabled: _imagesEnabled,
+            onSoundChanged: (value) {
+              setDialogState(() {
+                setState(() {
+                  _soundEnabled = value;
+                  _audioService.soundEnabled = value;
+                });
+              });
+            },
+            onImagesChanged: (value) {
+              setDialogState(() {
+                setState(() {
+                  _imagesEnabled = value;
+                });
+              });
+            },
           );
         },
       ),
+    );
+  }
+
+  void _showHowToPlayDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => const HowToPlayDialog(),
     );
   }
 
@@ -270,7 +186,23 @@ class _GamePageState extends State<GamePage>
     if (error != null) {
       return GameOverScreen(
         error: error!,
-        playAgainButton: _buildFancyPlayAgainButton(),
+        playAgainButton: ElevatedButton(
+          onPressed: restartGame,
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 32,
+              vertical: 16,
+            ),
+            backgroundColor: const Color(0xFF27AE60),
+          ),
+          child: const Text(
+            'Play Again',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
       );
     }
 
@@ -289,13 +221,13 @@ class _GamePageState extends State<GamePage>
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            onPressed: _showHowToPlay,
-            tooltip: 'How to Play',
-          ),
           Center(
             child: ResourceDisplay(resources: resources),
+          ),
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: _showHowToPlayDialog,
+            tooltip: 'How to Play',
           ),
           IconButton(
             icon: const Icon(Icons.settings),
@@ -359,7 +291,7 @@ class _GamePageState extends State<GamePage>
                             ),
                             if (_imagesEnabled) ...[
                               const SizedBox(width: 20),
-                              _buildImage(currentNode!.image),
+                              GameImage(imagePath: currentNode!.image),
                             ],
                           ],
                         ),
@@ -404,7 +336,23 @@ class _GamePageState extends State<GamePage>
                             ),
                           ],
                           const SizedBox(height: 20),
-                          _buildFancyPlayAgainButton(),
+                          ElevatedButton(
+                            onPressed: restartGame,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 16,
+                              ),
+                              backgroundColor: const Color(0xFF27AE60),
+                            ),
+                            child: const Text(
+                              'Play Again',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ],
                       ],
                     ),
@@ -443,123 +391,6 @@ class _GamePageState extends State<GamePage>
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildImage(String imagePath) {
-    if (!_imagesEnabled) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      width: 400,
-      height: 300,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: const Color(0xFFE0E0E0),
-          width: 1,
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.asset(
-          'assets/images/${imagePath.isNotEmpty ? imagePath : 'default.webp'}',
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              color: const Color(0xFFF5F5F5),
-              child: const Center(
-                child: Text(
-                  'Image not available',
-                  style: TextStyle(
-                    color: Color(0xFF9E9E9E),
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showSettingsDialog() async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return Dialog(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 300),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.settings),
-                        SizedBox(width: 8),
-                        Text(
-                          'Settings',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.volume_up),
-                      title: const Text('Sound Effects'),
-                      trailing: Switch(
-                        value: _soundEnabled,
-                        onChanged: (bool value) {
-                          setDialogState(() {
-                            setState(() {
-                              _soundEnabled = value;
-                            });
-                          });
-                        },
-                      ),
-                    ),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.image),
-                      title: const Text('Show Images'),
-                      trailing: Switch(
-                        value: _imagesEnabled,
-                        onChanged: (bool value) {
-                          setDialogState(() {
-                            setState(() {
-                              _imagesEnabled = value;
-                            });
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        child: const Text('Close'),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
     );
   }
 }
