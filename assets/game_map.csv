@@ -18,8 +18,8 @@ nodeID,option1,option2,option3,text1,text2,text3,resources1,resources2,resources
 17,18,20,21,Prepare for battle,Scout perimeter,Negotiate peace,-20,-10,-15,The enemy is near! How will you defend?,Cossacks_overlooking_town.webp,warning.mp3,,,,
 18,21,22,23,Attempt a sneak attack,Prepare defenses,Retreat,-10,-15,-20,Your options are dwindling. Choose your next move carefully.,Weary_Cossacks_defensive_posture.webp,attack.mp3,,,,
 19,23,24,25,Call for reinforcements,Scout for enemy movements,Regroup,-10,-15,-20,Your options are dwindling. Choose wisely.,Weary_Cossacks_defensive_posture.webp,,,,,
-20,0,0,0,End Game: You have lost. Reflect on your choices.,,,,,,,Aftermath_of_battle_ruins.webp,lose.mp3,0,1,,1
-21,0,0,0,End Game: Congratulations! You have succeeded.,,,,,,,Victorious_Cossacks_cheering.webp,win.mp3,1,0,,0
+20,0,0,0,End Game: You have lost. Reflect on your choices.,,,,,,Your strategic missteps led to your downfall. The enemy overwhelmed your forces and you were unable to regain control. Reflect on your choices and plan better next time.,Aftermath_of_battle_ruins.webp,lose.mp3,0,1,,1
+21,0,0,0,End Game: Congratulations! You have succeeded.,,,,,,You have triumphed through careful planning and decisive action. The Cossacks have achieved their goal and your leadership has ensured victory.,Victorious_Cossacks_cheering.webp,win.mp3,1,0,,0
 22,10,21,20,Train Advanced Units,Focus on Cavalry,Invest in Artillery,10,10,-10,Choose your final path wisely.,Cossacks_overlooking_town.webp,,,,,
 23,10,21,20,Pursue Diplomacy,Employ Deception,Engage Aggressively,10,-10,-20,Choose your final path wisely.,Cossack_scouts_with_map.webp,,,,,
 24,10,21,20,Strengthen Defenses,Gather Intelligence,Scout Enemy Positions,10,-10,-20,Choose your final path wisely.,Cossack_officers_planning_battle.webp,,,,,
