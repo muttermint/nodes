@@ -7,15 +7,15 @@ import 'services/firebase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  
   // Initialize Firebase first
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
+  
   final firebaseService = FirebaseService();
   await firebaseService.initialize();
-
+  
   runApp(const MyApp());
 }
 
@@ -83,7 +83,7 @@ class _GamePageState extends State<GamePage> {
 
       await GameMap().initialize();
       final startNode = GameMap().getStartNode();
-
+      
       setState(() {
         currentNode = startNode;
         isLoading = false;
@@ -121,9 +121,8 @@ class _GamePageState extends State<GamePage> {
     }
 
     setState(() {
-      resources = (resources - currentNode!.resourceCosts[index])
-          .clamp(0.0, double.infinity);
-
+      resources = (resources - currentNode!.resourceCosts[index]).clamp(0.0, double.infinity);
+      
       if (resources <= 0) {
         currentNode = GameMap().findLoseNode();
         _playNodeSound();
@@ -132,7 +131,7 @@ class _GamePageState extends State<GamePage> {
 
       final nextNodeId = currentNode!.nextNodes[index];
       print('Transitioning to node: $nextNodeId');
-
+      
       final nextNode = GameMap().getNode(nextNodeId);
       if (nextNode == null) {
         error = 'Game error: Invalid transition';
@@ -412,9 +411,7 @@ class _GamePageState extends State<GamePage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                currentNode!.isWinNode
-                                    ? Icons.emoji_events
-                                    : Icons.warning,
+                                currentNode!.isWinNode ? Icons.emoji_events : Icons.warning,
                                 color: currentNode!.isWinNode
                                     ? const Color(0xFF27AE60)
                                     : const Color(0xFFE74C3C),
@@ -469,8 +466,7 @@ class _GamePageState extends State<GamePage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                if (!currentNode!.isEndNode &&
-                    currentNode!.actionTexts.isNotEmpty) ...[
+                if (!currentNode!.isEndNode && currentNode!.actionTexts.isNotEmpty) ...[
                   const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

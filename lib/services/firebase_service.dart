@@ -44,8 +44,7 @@ class FirebaseService {
       return snapshot.docs
           .map((doc) => {
                 ...doc.data() as Map<String, dynamic>,
-                'nodeId': (doc.get('nodeID') ?? '')
-                    .toString(), // Convert nodeID to string
+                'nodeId': (doc.get('nodeID') ?? '').toString(), // Convert nodeID to string
               })
           .toList();
     } catch (e) {
@@ -54,8 +53,7 @@ class FirebaseService {
     }
   }
 
-  Future<void> logGameEvent(String eventName,
-      {Map<String, dynamic>? parameters}) async {
+  Future<void> logGameEvent(String eventName, {Map<String, dynamic>? parameters}) async {
     if (!_initialized) return;
 
     try {
