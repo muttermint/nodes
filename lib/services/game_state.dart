@@ -1,11 +1,10 @@
 import 'package:flutter/foundation.dart';
 import '../game_map.dart';
 import 'audio_service.dart';
-import 'firebase_service.dart';
 
 class GameState extends ChangeNotifier {
   GameMapNode? currentNode;
-  int points = 100;
+  int points = 0; // Changed from 100 to 0
   String? error;
   bool isLoading = true;
   bool _soundEnabled = true;
@@ -88,7 +87,7 @@ class GameState extends ChangeNotifier {
   }
 
   void restartGame() {
-    points = 100;
+    points = 0; // Changed from 100 to 0
     currentNode = _gameMap.getStartNode();
     error = null;
     notifyListeners();

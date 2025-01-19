@@ -2,22 +2,18 @@ import 'package:flutter/material.dart';
 
 class ActionButton extends StatelessWidget {
   final String text;
-  final int pointsChange; // Renamed from resourceCost
+  final int pointsChange;
   final VoidCallback onPressed;
 
   const ActionButton({
     super.key,
     required this.text,
-    required this.pointsChange, // Renamed parameter
+    required this.pointsChange,
     required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    final String pointsText =
-        pointsChange >= 0 ? '+$pointsChange' : '$pointsChange';
-    final Color pointsColor = pointsChange >= 0 ? Colors.green : Colors.red;
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: ElevatedButton(
@@ -30,8 +26,8 @@ class ActionButton extends StatelessWidget {
           ),
         ),
         child: Text(
-          '$text ($pointsText points)',
-          style: TextStyle(
+          text,
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
             color: Colors.white,
