@@ -6,6 +6,7 @@ import 'services/firebase_service.dart';
 import 'widgets/how_to_play_dialog.dart';
 import 'widgets/action_button.dart';
 import 'widgets/resource_display.dart';
+import 'widgets/game_over_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -266,27 +267,9 @@ class _GamePageState extends State<GamePage>
   @override
   Widget build(BuildContext context) {
     if (error != null) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.warning_amber),
-              SizedBox(width: 8),
-              Text('Game Over'),
-            ],
-          ),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(error!, style: const TextStyle(color: Colors.red)),
-              const SizedBox(height: 20),
-              _buildFancyPlayAgainButton(),
-            ],
-          ),
-        ),
+      return GameOverScreen(
+        error: error!,
+        playAgainButton: _buildFancyPlayAgainButton(),
       );
     }
 
